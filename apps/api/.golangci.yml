@@ -1,0 +1,20 @@
+run:
+  timeout: 3m
+  tests: true
+
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - gosimple
+    - ineffassign
+    - typecheck
+    - unused
+
+issues:
+  exclude-rules:
+    # Allow unused params in handlers (common in HTTP)
+    - path: _test\.go
+      linters:
+        - errcheck
