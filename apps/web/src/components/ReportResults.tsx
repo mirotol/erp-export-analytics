@@ -13,16 +13,16 @@ type SortConfig = {
 
 function SortIcon({ active, direction }: { active: boolean; direction?: "asc" | "desc" }) {
   return (
-    <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+    <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
       {!active ? (
         <ChevronsUpDown className="w-6 h-6 text-muted-foreground/70 opacity-60 group-hover:opacity-100 transition-opacity" />
       ) : (
         <span className="flex flex-col -space-y-2.5">
           <ChevronUp
-            className={`w-6 h-6 ${direction === "asc" ? "text-accent" : "text-muted-foreground/60"}`}
+            className={`w-5 h-5 ${direction === "asc" ? "text-accent" : "text-muted-foreground/60"}`}
           />
           <ChevronDown
-            className={`w-6 h-6 ${direction === "desc" ? "text-accent" : "text-muted-foreground/60"}`}
+            className={`w-5 h-5 ${direction === "desc" ? "text-accent" : "text-muted-foreground/60"}`}
           />
         </span>
       )}
@@ -110,7 +110,7 @@ export function ReportResults({ result }: ReportResultsProps) {
                     className="px-4 py-3 text-base font-semibold cursor-pointer hover:bg-border transition-colors group whitespace-nowrap"
                     onClick={() => handleSort(i)}
                   >
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-1.5">
                       <span>{col}</span>
                       <SortIcon active={sortConfig?.key === i} direction={sortConfig?.direction} />
                     </div>
