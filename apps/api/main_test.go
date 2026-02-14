@@ -6,7 +6,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+	"time"
 )
 
 func TestHandleUpload(t *testing.T) {
@@ -43,6 +45,13 @@ func TestHandleUpload(t *testing.T) {
 		}
 		if resp.Size == 0 {
 			t.Error("expected size to be non-zero")
+		}
+
+		if len(resp.Columns) != 2 || resp.Columns[0] != "id" || resp.Columns[1] != "name" {
+			t.Errorf("expected columns [id name], got %v", resp.Columns)
+		}
+		if len(resp.PreviewRows) != 1 || resp.PreviewRows[0][0] != "1" || resp.PreviewRows[0][1] != "test" {
+			t.Errorf("expected previewRows [[1 test]], got %v", resp.PreviewRows)
 		}
 	})
 
@@ -112,6 +121,13 @@ func TestHandleUpload(t *testing.T) {
 		if resp.FileName != "passwd.csv" {
 			t.Errorf("expected sanitized fileName passwd.csv, got %s", resp.FileName)
 		}
+
+		if len(resp.Columns) != 2 || resp.Columns[0] != "id" || resp.Columns[1] != "name" {
+			t.Errorf("expected columns [id name], got %v", resp.Columns)
+		}
+		if len(resp.PreviewRows) != 1 || resp.PreviewRows[0][0] != "1" || resp.PreviewRows[0][1] != "test" {
+			t.Errorf("expected previewRows [[1 test]], got %v", resp.PreviewRows)
+		}
 	})
 
 	t.Run("wrong method", func(t *testing.T) {
@@ -122,6 +138,116 @@ func TestHandleUpload(t *testing.T) {
 
 		if rr.Code != http.StatusMethodNotAllowed {
 			t.Errorf("expected status 405, got %d", rr.Code)
+		}
+	})
+
+	t.Run("cleanup and overridable temp dir with TTL", func(t *testing.T) {
+		oldDir := uploadTempDir
+		tmpDir := t.TempDir()
+		uploadTempDir = tmpDir
+
+		// Set very short TTL for testing
+		oldTTL := reportTTL
+		reportTTL = 0 * time.Second
+		defer func() {
+			uploadTempDir = oldDir
+			reportTTL = oldTTL
+
+			// Clean up any remaining reports after test
+			reportsMu.Lock()
+			reports = make(map[string]Report)
+			reportsMu.Unlock()
+		}()
+
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+		part, err := writer.CreateFormFile("file", "test.csv")
+		if err != nil {
+			t.Fatal(err)
+		}
+		part.Write([]byte("id,name\n1,test"))
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/upload", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+		rr := httptest.NewRecorder()
+
+		handleUpload(rr, req)
+
+		if rr.Code != http.StatusCreated {
+			t.Errorf("expected status 201, got %d", rr.Code)
+		}
+
+		// Check if the file exists (it should because it's not deleted immediately)
+		entries, err := os.ReadDir(tmpDir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(entries) != 1 {
+			t.Errorf("expected temp directory to have 1 file, but found %d files", len(entries))
+		}
+
+		// Run manual cleanup
+		cleanupExpiredReports()
+
+		// Check if the directory is empty after manual cleanup
+		entries, err = os.ReadDir(tmpDir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(entries) != 0 {
+			t.Errorf("expected temp directory to be empty after cleanup, but found %d files", len(entries))
+		}
+	})
+
+	t.Run("empty csv", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+		_, err := writer.CreateFormFile("file", "empty.csv")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// Write nothing
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/upload", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+		rr := httptest.NewRecorder()
+
+		handleUpload(rr, req)
+
+		if rr.Code != http.StatusBadRequest {
+			t.Errorf("expected status 400 for empty csv, got %d", rr.Code)
+		}
+	})
+
+	t.Run("variable length rows", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+		part, err := writer.CreateFormFile("file", "variable.csv")
+		if err != nil {
+			t.Fatal(err)
+		}
+		part.Write([]byte("id,name,extra\n1,test\n2,test2,more"))
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/upload", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+		rr := httptest.NewRecorder()
+
+		handleUpload(rr, req)
+
+		if rr.Code != http.StatusCreated {
+			t.Errorf("expected status 201, got %d. Body: %s", rr.Code, rr.Body.String())
+		}
+
+		var resp UploadResponse
+		if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
+			t.Fatal(err)
+		}
+
+		if len(resp.PreviewRows) != 2 {
+			t.Errorf("expected 2 preview rows, got %d", len(resp.PreviewRows))
 		}
 	})
 }
@@ -141,8 +267,8 @@ func TestHandleHealth(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if resp["status"] != "Healthy!" {
-		t.Errorf("expected status Healthy!, got %v", resp["status"])
+	if resp["status"] != "ok" {
+		t.Errorf("expected status ok, got %v", resp["status"])
 	}
 	if resp["time"] == nil {
 		t.Error("expected time to be present")
