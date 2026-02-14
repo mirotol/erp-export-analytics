@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { UploadCard } from "../components/UploadCard";
 import { ReportPreview } from "../components/ReportPreview";
+import { BuildReport } from "../components/BuildReport";
 import type { SampleFile, UploadResult } from "../lib/api";
 import { fetchSamples, fetchSamplePreview, uploadFile } from "../lib/api";
 
@@ -51,17 +52,17 @@ export default function HomePage() {
       <div className="max-w-6xl mx-auto space-y-10">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight text-foreground">
+            <h1 className="text-5xl font-bold tracking-tight text-foreground">
               ERP Export Analytics{" "}
-              <span className="text-accent text-lg font-medium ml-2 opacity-80">(POC)</span>
+              <span className="text-accent text-xl font-medium ml-2 opacity-80">(POC)</span>
             </h1>
-            <p className="text-muted-foreground mt-2 text-lg">
+            <p className="text-muted-foreground mt-3 text-xl">
               Streamlined CSV processing and preview tool.
             </p>
           </div>
         </header>
 
-        <main className="space-y-10">
+        <main className="space-y-12">
           <section>
             <UploadCard
               onFileUpload={handleFileUpload}
@@ -73,9 +74,14 @@ export default function HomePage() {
           </section>
 
           {uploadResult && (
-            <section>
-              <ReportPreview result={uploadResult} />
-            </section>
+            <>
+              <section>
+                <ReportPreview result={uploadResult} />
+              </section>
+              <section>
+                <BuildReport uploadResult={uploadResult} />
+              </section>
+            </>
           )}
         </main>
       </div>

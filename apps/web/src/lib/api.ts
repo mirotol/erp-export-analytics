@@ -30,6 +30,36 @@ export async function fetchSamplePreview(sampleId: string): Promise<UploadResult
   return res.json();
 }
 
+export interface ReportConfig {
+  groupBy: string[];
+  metrics: { op: "count" | "sum"; field?: string }[];
+  filters: { field: string; op: "eq" | "contains"; value: string }[];
+  limit: number;
+}
+
+export interface ReportResult {
+  columns: string[];
+  rows: string[][];
+  rowsScanned: number;
+}
+
+export async function runReport(reportId: string, config: ReportConfig): Promise<ReportResult> {
+  const res = await fetch(`/api/reports/${reportId}/run`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(config),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Report failed (HTTP ${res.status})`);
+  }
+
+  return res.json();
+}
+
 export async function uploadFile(file: File): Promise<UploadResult> {
   const form = new FormData();
   form.append("file", file);

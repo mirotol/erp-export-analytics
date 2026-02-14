@@ -12,7 +12,7 @@ export function SampleButtons({ samples, onSelect, isLoading }: SampleButtonsPro
 
   return (
     <div className="pt-4 border-t border-border">
-      <p className="text-sm font-medium mb-3">Or try with sample data:</p>
+      <p className="text-base font-medium mb-3">Or try with sample data:</p>
       <div className="flex flex-wrap gap-3">
         {samples.map((sample) => (
           <Button

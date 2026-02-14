@@ -15,4 +15,3 @@ web-dev:
 
 web-install:
 	cd apps/web && npm install
-

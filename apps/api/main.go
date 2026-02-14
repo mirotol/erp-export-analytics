@@ -299,6 +299,241 @@ func cleanupExpiredReports() {
 	}
 }
 
+type ReportRequest struct {
+	GroupBy []string `json:"groupBy"`
+	Metrics []struct {
+		Op    string `json:"op"`
+		Field string `json:"field,omitempty"`
+	} `json:"metrics"`
+	Filters []struct {
+		Field string `json:"field"`
+		Op    string `json:"op"`
+		Value string `json:"value"`
+	} `json:"filters"`
+	Limit int `json:"limit"`
+}
+
+type ReportResponse struct {
+	Columns     []string   `json:"columns"`
+	Rows        [][]string `json:"rows"`
+	RowsScanned int        `json:"rowsScanned"`
+}
+
+func handleRunReport(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	reportID := strings.TrimPrefix(r.URL.Path, "/api/reports/")
+	reportID = strings.TrimSuffix(reportID, "/run")
+	if reportID == "" {
+		http.Error(w, "missing report id", http.StatusBadRequest)
+		return
+	}
+
+	reportsMu.RLock()
+	report, ok := reports[reportID]
+	reportsMu.RUnlock()
+
+	var filePath string
+	if !ok {
+		// Check if it's a sample report
+		if strings.HasPrefix(reportID, "sample-") {
+			sampleID := strings.TrimPrefix(reportID, "sample-")
+			sample, ok := sampleFiles[sampleID]
+			if !ok {
+				http.Error(w, "report not found", http.StatusNotFound)
+				return
+			}
+			filePath = filepath.Join("data", "samples", sample.FileName)
+		} else {
+			http.Error(w, "report not found", http.StatusNotFound)
+			return
+		}
+	} else {
+		filePath = report.FilePath
+	}
+
+	var req ReportRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	f, err := os.Open(filePath)
+	if err != nil {
+		log.Printf("error opening report file %s: %v", filePath, err)
+		http.Error(w, "failed to open report file", http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+
+	csvReader := csv.NewReader(f)
+	csvReader.FieldsPerRecord = -1
+
+	headers, err := csvReader.Read()
+	if err != nil {
+		http.Error(w, "failed to read csv headers", http.StatusInternalServerError)
+		return
+	}
+
+	headerMap := make(map[string]int)
+	for i, h := range headers {
+		headerMap[h] = i
+	}
+
+	// Simple validation and setup
+	groupByIdx := -1
+	if len(req.GroupBy) > 0 {
+		idx, ok := headerMap[req.GroupBy[0]]
+		if !ok {
+			http.Error(w, "invalid groupBy column: "+req.GroupBy[0], http.StatusBadRequest)
+			return
+		}
+		groupByIdx = idx
+	}
+
+	// Metrics setup
+	type metricInfo struct {
+		op    string
+		field string
+		idx   int
+	}
+	var metrics []metricInfo
+	for _, m := range req.Metrics {
+		idx := -1
+		if m.Field != "" {
+			var ok bool
+			idx, ok = headerMap[m.Field]
+			if !ok {
+				http.Error(w, "invalid metric field: "+m.Field, http.StatusBadRequest)
+				return
+			}
+		}
+		metrics = append(metrics, metricInfo{op: m.Op, field: m.Field, idx: idx})
+	}
+
+	// Filter setup
+	type filterInfo struct {
+		idx   int
+		op    string
+		value string
+	}
+	var filters []filterInfo
+	for _, f := range req.Filters {
+		idx, ok := headerMap[f.Field]
+		if !ok {
+			http.Error(w, "invalid filter field: "+f.Field, http.StatusBadRequest)
+			return
+		}
+		filters = append(filters, filterInfo{idx: idx, op: f.Op, value: f.Value})
+	}
+
+	// Aggregation
+	// key is groupBy value (or empty string if no groupBy)
+	// value is slice of float64 for metrics
+	results := make(map[string][]float64)
+	groupOrder := []string{}
+	rowsScanned := 0
+
+	for {
+		row, err := csvReader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Printf("error reading csv row: %v", err)
+			break
+		}
+		rowsScanned++
+
+		// Apply filters
+		match := true
+		for _, f := range filters {
+			if f.idx >= len(row) {
+				match = false
+				break
+			}
+			val := row[f.idx]
+			if f.op == "eq" {
+				if val != f.value {
+					match = false
+					break
+				}
+			} else if f.op == "contains" {
+				if !strings.Contains(strings.ToLower(val), strings.ToLower(f.value)) {
+					match = false
+					break
+				}
+			}
+		}
+		if !match {
+			continue
+		}
+
+		// Determine group
+		groupKey := ""
+		if groupByIdx != -1 && groupByIdx < len(row) {
+			groupKey = row[groupByIdx]
+		}
+
+		if _, ok := results[groupKey]; !ok {
+			results[groupKey] = make([]float64, len(metrics))
+			groupOrder = append(groupOrder, groupKey)
+		}
+
+		// Update metrics
+		for i, m := range metrics {
+			if m.op == "count" {
+				results[groupKey][i]++
+			} else if m.op == "sum" {
+				if m.idx < len(row) {
+					valStr := row[m.idx]
+					var val float64
+					fmt.Sscanf(valStr, "%f", &val)
+					results[groupKey][i] += val
+				}
+			}
+		}
+	}
+
+	// Prepare response
+	respColumns := []string{}
+	if groupByIdx != -1 {
+		respColumns = append(respColumns, req.GroupBy[0])
+	}
+	for _, m := range req.Metrics {
+		colName := m.Op
+		if m.Field != "" {
+			colName += "(" + m.Field + ")"
+		}
+		respColumns = append(respColumns, colName)
+	}
+
+	respRows := [][]string{}
+	for _, gk := range groupOrder {
+		rowValues := results[gk]
+		row := []string{}
+		if groupByIdx != -1 {
+			row = append(row, gk)
+		}
+		for _, v := range rowValues {
+			row = append(row, fmt.Sprintf("%.2f", v))
+		}
+		respRows = append(respRows, row)
+		if req.Limit > 0 && len(respRows) >= req.Limit {
+			break
+		}
+	}
+
+	writeJSON(w, http.StatusOK, ReportResponse{
+		Columns:     respColumns,
+		Rows:        respRows,
+		RowsScanned: rowsScanned,
+	})
+}
+
 func main() {
 	startCleanupWorker()
 
@@ -307,6 +542,7 @@ func main() {
 	mux.HandleFunc("/api/upload", handleUpload)
 	mux.HandleFunc("/api/samples", handleGetSamples)
 	mux.HandleFunc("/api/samples/", handleDownloadSample)
+	mux.HandleFunc("/api/reports/", handleRunReport)
 	mux.HandleFunc("/health", handleHealth)
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
