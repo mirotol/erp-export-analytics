@@ -1,0 +1,51 @@
+invoice_id,customer_name,customer_email,invoice_date,due_date,status,currency,subtotal,tax,total,paid_amount,country
+INV-1001,Acme Corp,billing@acme.com,2026-01-01,2026-01-31,Paid,USD,1000.00,80.00,1080.00,1080.00,USA
+INV-1002,Global Industries,finance@global.net,2026-01-05,2026-02-05,Paid,EUR,2500.00,500.00,3000.00,3000.00,Germany
+INV-1003,Stark Enterprises,tony@stark.com,2026-01-10,2026-02-10,Overdue,USD,5000.00,0.00,5000.00,0.00,USA
+INV-1004,Wayne Tech,bruce@wayne.com,2026-01-15,2026-02-15,Paid,GBP,1200.00,240.00,1440.00,1440.00,UK
+INV-1005,Oscorp,norman@oscorp.com,2026-01-20,2026-02-20,Sent,USD,800.00,64.00,864.00,0.00,USA
+INV-1006,Cyberdyne Systems,sarah@cyberdyne.io,2026-01-22,2026-02-22,Sent,USD,15000.00,0.00,15000.00,0.00,USA
+INV-1007,Umbrella Corp,info@umbrella.com,2026-01-25,2026-02-25,Draft,EUR,450.00,90.00,540.00,,France
+INV-1008,Initech,peter@initech.com,2026-01-28,2026-02-28,Paid,USD,200.00,16.00,216.00,216.00,USA
+INV-1009,Hooli,gavin@hooli.com,2026-01-30,2026-03-02,Sent,USD,3200.00,256.00,3456.00,0.00,USA
+INV-1010,Pied Piper,richard@piedpiper.com,2026-02-01,2026-03-03,Paid,USD,150.00,12.00,162.00,162.00,USA
+INV-1011,Massive Dynamic,walter@massivedynamic.com,2026-02-02,2026-03-04,Sent,GBP,2000.00,400.00,2400.00,0.00,UK
+INV-1012,Soylent Corp,food@soylent.com,2026-02-03,2026-03-05,Cancelled,EUR,600.00,120.00,720.00,0.00,France
+INV-1013,Weyland-Yutani,burke@weyland.com,2026-02-04,2026-03-06,Sent,USD,10000.00,0.00,10000.00,0.00,USA
+INV-1014,Tyrell Corp,eldon@tyrell.com,2026-02-05,2026-03-07,Paid,USD,850.00,68.00,918.00,918.00,USA
+INV-1015,Vandelay Industries,george@vandelay.com,2026-02-06,2026-03-08,Draft,USD,300.00,24.00,324.00,,USA
+INV-1016,Dunder Mifflin,michael@dundermifflin.com,2026-02-07,2026-03-09,Sent,USD,120.00,9.60,129.60,0.00,USA
+INV-1017,Sterling Cooper,don@sc.com,2026-02-08,2026-03-10,Paid,USD,4500.00,360.00,4860.00,4860.00,USA
+INV-1018,Prestige Worldwide,dale@prestige.com,2026-02-09,2026-03-11,Sent,USD,75.00,6.00,81.00,0.00,USA
+INV-1019,Gekko & Co,gordon@gekko.com,2026-02-10,2026-03-12,Overdue,USD,12000.00,960.00,12960.00,0.00,USA
+INV-1020,Gringotts Bank,bogrod@gringotts.co.uk,2026-02-11,2026-03-13,Paid,GBP,500.00,100.00,600.00,600.00,UK
+INV-1021,E Corp,elliot@ecorp.com,2026-02-12,2026-03-14,Sent,USD,999.99,80.00,1079.99,0.00,USA
+INV-1022,LexCorp,lex@lexcorp.com,2026-02-13,2026-03-15,Sent,USD,2200.00,176.00,2376.00,0.00,USA
+INV-1023,Buy More,chuck@buymore.com,2026-02-14,2026-03-16,Draft,USD,45.00,3.60,48.60,,USA
+INV-1024,Los Pollos Hermanos,gus@lph.com,2026-02-14,2026-03-16,Paid,USD,800.00,0.00,800.00,800.00,USA
+INV-1025,Strickland Propane,hank@strickland.com,2026-01-10,2026-02-10,Paid,USD,350.00,28.00,378.00,378.00,USA
+INV-1026,Bluth Company,michael@bluth.com,2026-01-11,2026-02-11,Overdue,USD,1500.00,120.00,1620.00,0.00,USA
+INV-1027,Planet Express,hubert@planetexpress.com,2026-01-12,2026-02-12,Paid,USD,90.00,7.20,97.20,97.20,USA
+INV-1028,MomCorp,mom@momcorp.com,2026-01-13,2026-02-13,Paid,USD,25000.00,2000.00,27000.00,27000.00,USA
+INV-1029,Aperture Science,cave@aperture.com,2026-01-14,2026-02-14,Cancelled,USD,4000.00,320.00,4320.00,0.00,USA
+INV-1030,Black Mesa,isaac@blackmesa.com,2026-01-15,2026-02-15,Paid,USD,1200.00,96.00,1296.00,1296.00,USA
+INV-1031,S.T.A.R. Labs,barry@starlabs.com,2026-01-16,2026-02-16,Sent,USD,600.00,48.00,648.00,0.00,USA
+INV-1032,Kohl's,account@kohls.com,2026-01-17,2026-02-17,Paid,USD,89.50,7.16,96.66,96.66,USA
+INV-1033,Target,billing@target.com,2026-01-18,2026-02-18,Paid,USD,142.00,11.36,153.36,153.36,USA
+INV-1034,Walmart,ops@walmart.com,2026-01-19,2026-02-19,Paid,USD,12500.00,1000.00,13500.00,13500.00,USA
+INV-1035,Amazon,finance@amazon.com,2026-01-20,2026-02-20,Paid,USD,45600.00,3648.00,49248.00,49248.00,USA
+INV-1036,Netflix,billing@netflix.com,2026-01-21,2026-02-21,Paid,USD,15.99,1.28,17.27,17.27,USA
+INV-1037,Spotify,payments@spotify.com,2026-01-22,2026-02-22,Paid,EUR,9.99,2.00,11.99,11.99,Sweden
+INV-1038,Apple,billing@apple.com,2026-01-23,2026-02-23,Paid,USD,1299.00,103.92,1402.92,1402.92,USA
+INV-1039,Microsoft,accounts@microsoft.com,2026-01-24,2026-02-24,Paid,USD,99.00,7.92,106.92,106.92,USA
+INV-1040,Google,ads-billing@google.com,2026-01-25,2026-02-25,Paid,USD,500.00,40.00,540.00,540.00,USA
+INV-1041,Meta,billing@meta.com,2026-01-26,2026-02-26,Sent,USD,12000.00,960.00,12960.00,0.00,USA
+INV-1042,Twitter,x-billing@x.com,2026-01-27,2026-02-27,Overdue,USD,8.00,0.64,8.64,0.00,USA
+INV-1043,SpaceX,billing@spacex.com,2026-01-28,2026-02-28,Sent,USD,150000.00,0.00,150000.00,0.00,USA
+INV-1044,Tesla,energy@tesla.com,2026-01-29,2026-03-01,Paid,USD,4500.00,360.00,4860.00,4860.00,USA
+INV-1045,Oracle,larry@oracle.com,2026-01-30,2026-03-02,Sent,USD,8500.00,680.00,9180.00,0.00,USA
+INV-1046,SAP,billing@sap.com,2026-01-31,2026-03-03,Sent,EUR,12500.00,2500.00,15000.00,0.00,Germany
+INV-1047,Salesforce,finance@salesforce.com,2026-02-01,2026-03-03,Paid,USD,320.00,25.60,345.60,345.60,USA
+INV-1048,Adobe,billing@adobe.com,2026-02-02,2026-03-04,Paid,USD,52.99,4.24,57.23,57.23,USA
+INV-1049,Slack,billing@slack.com,2026-02-03,2026-03-05,Paid,USD,150.00,12.00,162.00,162.00,USA
+INV-1050,Zoom,accounts@zoom.us,2026-02-04,2026-03-06,Paid,USD,14.99,1.20,16.19,16.19,USA

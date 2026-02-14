@@ -32,6 +32,28 @@ var (
 	reportsMu sync.RWMutex
 )
 
+type SampleFile struct {
+	ID       string `json:"id"`
+	FileName string `json:"fileName"`
+	Title    string `json:"title"`
+	Rows     int    `json:"rows"`
+}
+
+var sampleFiles = map[string]SampleFile{
+	"sample-invoices": {
+		ID:       "sample-invoices",
+		FileName: "sample-invoices.csv",
+		Title:    "Invoices (ERP export)",
+		Rows:     50,
+	},
+	"sample-payments": {
+		ID:       "sample-payments",
+		FileName: "sample-payments.csv",
+		Title:    "Payments (ERP export)",
+		Rows:     80,
+	},
+}
+
 type UploadResponse struct {
 	ReportID    string     `json:"reportId"`
 	FileName    string     `json:"fileName"`
@@ -53,6 +75,31 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 		"status": "ok",
 		"time":   time.Now().UTC().Format(time.RFC3339),
 	})
+}
+
+func parseCSV(reader io.Reader) ([]string, [][]string, error) {
+	csvReader := csv.NewReader(reader)
+	csvReader.FieldsPerRecord = -1
+
+	// Read headers
+	headers, err := csvReader.Read()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var previewRows [][]string
+	for i := 0; i < 50; i++ {
+		row, err := csvReader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, nil, err
+		}
+		previewRows = append(previewRows, row)
+	}
+
+	return headers, previewRows, nil
 }
 
 func handleUpload(w http.ResponseWriter, r *http.Request) {
@@ -129,37 +176,16 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to open temporary file for reading", http.StatusInternalServerError)
 		return
 	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			log.Printf("error closing file for reading: %v", err)
-		}
-	}()
+	defer f.Close()
 
-	csvReader := csv.NewReader(f)
-	csvReader.FieldsPerRecord = -1
-
-	// Read headers
-	headers, err := csvReader.Read()
+	headers, previewRows, err := parseCSV(f)
 	if err == io.EOF {
 		http.Error(w, "csv file is empty", http.StatusBadRequest)
 		return
 	}
 	if err != nil {
-		http.Error(w, "failed to read csv headers", http.StatusBadRequest)
+		http.Error(w, "failed to parse csv", http.StatusBadRequest)
 		return
-	}
-
-	var previewRows [][]string
-	for i := 0; i < 50; i++ {
-		row, err := csvReader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			http.Error(w, "failed to read csv rows", http.StatusBadRequest)
-			return
-		}
-		previewRows = append(previewRows, row)
 	}
 
 	writeJSON(w, http.StatusCreated, UploadResponse{
@@ -169,6 +195,82 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		Columns:     headers,
 		PreviewRows: previewRows,
 	})
+}
+
+func handleGetSamples(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	samples := make([]SampleFile, 0, len(sampleFiles))
+	// Keep order consistent for tests if needed, but a simple list is fine
+	// For predictability, we can use the order they are defined or sort them
+	ids := []string{"sample-invoices", "sample-payments"}
+	for _, id := range ids {
+		if s, ok := sampleFiles[id]; ok {
+			samples = append(samples, s)
+		}
+	}
+
+	writeJSON(w, http.StatusOK, samples)
+}
+
+func handleDownloadSample(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	id := strings.TrimPrefix(r.URL.Path, "/api/samples/")
+	if id == "" {
+		http.Error(w, "missing sample id", http.StatusBadRequest)
+		return
+	}
+
+	// Check if this is a "view" request via query param
+	isView := r.URL.Query().Has("view")
+
+	sample, ok := sampleFiles[id]
+	if !ok {
+		http.Error(w, "sample not found", http.StatusNotFound)
+		return
+	}
+
+	path := filepath.Join("data", "samples", sample.FileName)
+	f, err := os.Open(path)
+	if err != nil {
+		log.Printf("error opening sample file %s: %v", path, err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+
+	if isView {
+		headers, previewRows, err := parseCSV(f)
+		if err != nil {
+			http.Error(w, "failed to parse sample csv", http.StatusInternalServerError)
+			return
+		}
+
+		info, _ := f.Stat()
+		writeJSON(w, http.StatusOK, UploadResponse{
+			ReportID:    fmt.Sprintf("sample-%s", id),
+			FileName:    sample.FileName,
+			Size:        info.Size(),
+			Columns:     headers,
+			PreviewRows: previewRows,
+		})
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", sample.FileName))
+	w.WriteHeader(http.StatusOK)
+
+	if _, err := io.Copy(w, f); err != nil {
+		log.Printf("error copying sample file to response: %v", err)
+	}
 }
 
 func startCleanupWorker() {
@@ -203,6 +305,8 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/api/upload", handleUpload)
+	mux.HandleFunc("/api/samples", handleGetSamples)
+	mux.HandleFunc("/api/samples/", handleDownloadSample)
 	mux.HandleFunc("/health", handleHealth)
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
