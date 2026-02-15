@@ -5,7 +5,7 @@ on:
   pull_request:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -15,18 +15,20 @@ jobs:
     defaults:
       run:
         working-directory: apps/api
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Go
-      - uses: actions/setup-go@v5
+        uses: actions/setup-go@v5
         with:
           go-version-file: apps/api/go.mod
           cache: true
 
       - name: Go fmt (check)
         run: |
-          unformatted=$(gofmt -l .)
+          unformatted="$(gofmt -l .)"
           if [ -n "$unformatted" ]; then
             echo "These files are not gofmt'd:"
             echo "$unformatted"
@@ -48,8 +50,10 @@ jobs:
     defaults:
       run:
         working-directory: apps/web
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Node
         uses: actions/setup-node@v4
