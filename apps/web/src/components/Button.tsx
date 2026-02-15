@@ -16,7 +16,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    "rounded-lg font-medium transition-all focus:ring-2 focus:ring-accent focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2";
+    "rounded-lg font-medium transition-all focus:ring-2 focus:ring-accent focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors";
 
   const sizes = {
     sm: "px-3 py-1.5 text-base",
@@ -25,7 +25,7 @@ export function Button({
 
   const variants = {
     primary: "bg-accent text-accent-foreground hover:opacity-90",
-    secondary: "bg-surface-hover text-foreground hover:bg-border border border-border",
+    secondary: "bg-surface-hover text-foreground hover:bg-border hover:border-accent/40 border border-border hover:text-accent shadow-sm hover:shadow-accent/10",
   };
 
   return (
