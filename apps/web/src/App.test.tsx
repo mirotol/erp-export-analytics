@@ -2,12 +2,6 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import App from "./App";
 
-class ResizeObserverMock {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-
 describe("App Happy Path", () => {
   const mockSamples = [
     { id: "sample-1", fileName: "sample-invoices.csv", title: "Invoices (ERP export)", rows: 1 },
@@ -27,34 +21,53 @@ describe("App Happy Path", () => {
     rowsScanned: 1,
   };
 
+  function inputToUrl(input: RequestInfo | URL): string {
+    if (typeof input === "string") return input;
+    if (input instanceof URL) return input.toString();
+    // At this point, it's Request (the other part of RequestInfo)
+    return input.url;
+  }
+
   beforeEach(() => {
     vi.restoreAllMocks();
-    globalThis.ResizeObserver = ResizeObserverMock as any;
 
-    globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
-      const url =
-        typeof input === "string"
-          ? input
-          : input instanceof URL
-            ? input.toString()
-            : ((input as Request).url ?? input.toString());
+    type FetchFn = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
+    const fetchMock = vi.fn<FetchFn>();
+
+    fetchMock.mockImplementation(async (input): Promise<Response> => {
+      const url = inputToUrl(input);
       const path = url.replace(/^https?:\/\/[^/]+/, "");
 
+      const resp = (r: Pick<Response, "ok" | "status" | "json" | "text">) =>
+        r as unknown as Response;
+
       if (path.startsWith("/api/samples") && !path.includes("/api/samples/")) {
-        return { ok: true, json: async () => mockSamples } as Response;
+        return resp({ ok: true, status: 200, json: async () => mockSamples, text: async () => "" });
       }
 
       if (path.startsWith("/api/samples/sample-1")) {
-        return { ok: true, json: async () => mockPreview } as Response;
+        return resp({ ok: true, status: 200, json: async () => mockPreview, text: async () => "" });
       }
 
       if (path.includes("/run")) {
-        return { ok: true, json: async () => mockReportResult } as Response;
+        return resp({
+          ok: true,
+          status: 200,
+          json: async () => mockReportResult,
+          text: async () => "",
+        });
       }
 
-      return { ok: false, status: 404, text: async () => "Not found" } as Response;
-    }) as any;
+      return resp({
+        ok: false,
+        status: 404,
+        json: async () => ({}),
+        text: async () => "Not found",
+      });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
   });
 
   it("renders page, loads samples, and can run a report", async () => {

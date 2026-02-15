@@ -25,8 +25,8 @@ export default function HomePage() {
     try {
       const result = await fetchSamplePreview(sampleId);
       setUploadResult(result);
-    } catch (e: any) {
-      setErr(e?.message ?? String(e));
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : String(e));
     } finally {
       setIsLoading(false);
     }
@@ -40,8 +40,8 @@ export default function HomePage() {
     try {
       const result = await uploadFile(file);
       setUploadResult(result);
-    } catch (e: any) {
-      setErr(e?.message ?? String(e));
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : String(e));
     } finally {
       setIsLoading(false);
     }
