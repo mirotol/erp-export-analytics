@@ -86,11 +86,8 @@ export function ReportChart({ result }: ReportChartProps) {
     return label;
   };
 
-  const formatTooltipLabel = (label: any) => {
-    if (typeof label === "string" && label.length > 30) {
-      return label.substring(0, 30) + "...";
-    }
-    return label;
+  const formatTooltipLabel = (label: React.ReactNode): React.ReactNode => {
+    return typeof label === "string" && label.length > 30 ? `${label.slice(0, 30)}...` : label;
   };
 
   // 6. Validate if chart can be shown
