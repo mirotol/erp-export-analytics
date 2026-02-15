@@ -1,5 +1,7 @@
 package engine
 
+// ReportRequest defines the parameters for generating a report, including
+// grouping, metrics, filters, and row limits.
 type ReportRequest struct {
 	GroupBy []string `json:"groupBy"`
 	Metrics []struct {
@@ -14,6 +16,7 @@ type ReportRequest struct {
 	Limit int `json:"limit"`
 }
 
+// ReportResponse contains the aggregated results of a report execution.
 type ReportResponse struct {
 	Columns     []string   `json:"columns"`
 	Rows        [][]string `json:"rows"`

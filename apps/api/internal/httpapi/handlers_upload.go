@@ -17,8 +17,10 @@ import (
 
 const maxUploadBytes = 10 << 20 // 10MB
 
+// UploadTempDir is the directory where uploaded CSV files are temporarily stored.
 var UploadTempDir = os.TempDir()
 
+// SetUploadTempDir overrides the default temporary directory for file uploads.
 func SetUploadTempDir(dir string) {
 	UploadTempDir = dir
 }

@@ -5,6 +5,7 @@ import (
 	"io"
 )
 
+// ParseCSV reads a CSV file and returns its headers and the first 50 data rows as a preview.
 func ParseCSV(reader io.Reader) ([]string, [][]string, error) {
 	csvReader := csv.NewReader(reader)
 	csvReader.FieldsPerRecord = -1

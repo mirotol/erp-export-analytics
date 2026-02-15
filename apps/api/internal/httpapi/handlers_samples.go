@@ -12,8 +12,10 @@ import (
 	"erp-export-analytics/api/internal/csvutil"
 )
 
+// DataDir is the base directory for sample data files.
 var DataDir = "data"
 
+// SampleFile represents metadata for a pre-defined sample dataset.
 type SampleFile struct {
 	ID       string `json:"id"`
 	FileName string `json:"fileName"`
@@ -21,6 +23,7 @@ type SampleFile struct {
 	Rows     int    `json:"rows"`
 }
 
+// SampleFiles maps sample IDs to their corresponding metadata.
 var SampleFiles = map[string]SampleFile{
 	"sample-invoices": {
 		ID:       "sample-invoices",

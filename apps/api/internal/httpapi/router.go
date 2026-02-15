@@ -2,6 +2,7 @@ package httpapi
 
 import "net/http"
 
+// NewRouter initializes and returns a new http.Handler configured with all API routes.
 func NewRouter() http.Handler {
 	mux := http.NewServeMux()
 

@@ -11,6 +11,8 @@ import (
 	"erp-export-analytics/api/internal/csvutil"
 )
 
+// RunReport processes a CSV file based on the provided request parameters,
+// performing filtering, grouping, and metric aggregation.
 func RunReport(filePath string, req ReportRequest) (ReportResponse, error) {
 	f, err := os.Open(filePath)
 	if err != nil {

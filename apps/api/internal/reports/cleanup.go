@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+// StartCleanupWorker initializes and starts a background goroutine that periodically
+// removes expired report files and their metadata from the store.
 func StartCleanupWorker() {
 	ticker := time.NewTicker(10 * time.Minute)
 	go func() {
@@ -16,6 +18,8 @@ func StartCleanupWorker() {
 	}()
 }
 
+// CleanupExpiredReports scans the report store for entries older than the configured TTL,
+// deletes their corresponding files from disk, and removes them from the store.
 func CleanupExpiredReports() {
 	StoreMu.Lock()
 	defer StoreMu.Unlock()

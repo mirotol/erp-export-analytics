@@ -14,6 +14,7 @@ func writeJSON(w http.ResponseWriter, status int, data any) {
 	}
 }
 
+// UploadResponse defines the JSON structure for a successful CSV upload response.
 type UploadResponse struct {
 	ReportID    string     `json:"reportId"`
 	FileName    string     `json:"fileName"`
