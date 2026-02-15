@@ -70,6 +70,14 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
     }
   };
 
+  const handleClearFilter = () => {
+    setFilterField("");
+    setFilterOp("eq");
+    setFilterValue("");
+  };
+
+  const isFilterEmpty = !filterField && filterOp === "eq" && !filterValue;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -177,10 +185,21 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
 
             {/* Filter */}
             <div className="space-y-3 lg:col-span-1">
-              <label className="text-base font-medium text-muted-foreground flex items-center gap-2">
-                <Filter className="w-5 h-5 text-accent" />
-                Filter (Optional)
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-base font-medium text-muted-foreground flex items-center gap-2">
+                  <Filter className="w-5 h-5 text-accent" />
+                  Filter
+                </label>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleClearFilter}
+                  disabled={isFilterEmpty}
+                  className="h-7 px-2 text-xs opacity-70 hover:opacity-100"
+                >
+                  Clear filter
+                </Button>
+              </div>
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <select
