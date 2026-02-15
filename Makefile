@@ -24,3 +24,6 @@ web-fmt:
 
 web-fmt-check:
 	cd apps/web && npm run format:check
+
+web-test:
+	cd apps/web && npm run test:run
