@@ -164,9 +164,17 @@ func RunReport(filePath string, req ReportRequest) (ReportResponse, error) {
 		if groupByIdx != -1 {
 			row = append(row, gk)
 		}
-		for _, v := range rowValues {
-			row = append(row, fmt.Sprintf("%.2f", v))
+		for i, v := range rowValues {
+			switch req.Metrics[i].Op {
+			case "count":
+				row = append(row, fmt.Sprintf("%d", int64(v)))
+			case "sum":
+				row = append(row, fmt.Sprintf("%.2f", v))
+			default:
+				row = append(row, fmt.Sprintf("%.2f", v))
+			}
 		}
+
 		respRows = append(respRows, row)
 		if req.Limit > 0 && len(respRows) >= req.Limit {
 			break
