@@ -1,6 +1,14 @@
 import { useState, useMemo } from "react";
-import { ChevronUp, ChevronDown, ChevronsUpDown, SearchX } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
+  SearchX,
+  Table as TableIcon,
+  BarChart3,
+} from "lucide-react";
 import type { ReportResult } from "../lib/api";
+import { ReportChart } from "./ReportChart";
 
 interface ReportResultsProps {
   result: ReportResult;
@@ -31,6 +39,7 @@ function SortIcon({ active, direction }: { active: boolean; direction?: "asc" | 
 }
 
 export function ReportResults({ result }: ReportResultsProps) {
+  const [view, setView] = useState<"table" | "chart">("table");
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(() => {
     // Default sorting:
     // If sum metric exists -> sort descending by sum
@@ -91,53 +100,87 @@ export function ReportResults({ result }: ReportResultsProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between px-1">
+      <div className="flex items-center justify-between">
         <h3 className="text-xl font-semibold">Report Results</h3>
-        <div className="text-base text-muted-foreground flex gap-4">
-          <span>{result.rows.length} groups</span>
-          <span>{result.rowsScanned.toLocaleString()} rows scanned</span>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center bg-surface border border-border rounded-lg p-1">
+            <button
+              onClick={() => setView("table")}
+              className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition-all ${
+                view === "table"
+                  ? "bg-surface-hover text-accent shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <TableIcon className="w-4 h-4" />
+              Table
+            </button>
+            <button
+              onClick={() => setView("chart")}
+              className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition-all ${
+                view === "chart"
+                  ? "bg-surface-hover text-accent shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              Chart
+            </button>
+          </div>
+
+          <div className="text-base text-muted-foreground flex gap-4">
+            <span>{result.rows.length} groups</span>
+            <span>{result.rowsScanned.toLocaleString()} rows scanned</span>
+          </div>
         </div>
       </div>
 
-      <div className="border border-border rounded-xl overflow-hidden bg-surface">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 bg-surface-hover z-10 border-b border-border">
-              <tr>
-                {result.columns.map((col, i) => (
-                  <th
-                    key={i}
-                    className="px-4 py-3 text-base font-semibold cursor-pointer hover:bg-border transition-colors group whitespace-nowrap"
-                    onClick={() => handleSort(i)}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span>{col}</span>
-                      <SortIcon active={sortConfig?.key === i} direction={sortConfig?.direction} />
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {sortedRows.map((row, i) => (
-                <tr
-                  key={i}
-                  className="border-b border-border/50 hover:bg-surface-hover/50 transition-colors"
-                >
-                  {row.map((cell, j) => (
-                    <td
-                      key={j}
-                      className="px-4 py-3 text-base text-muted-foreground whitespace-nowrap"
+      {view === "table" ? (
+        <div className="border border-border rounded-xl overflow-hidden bg-surface">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="sticky top-0 bg-surface-hover z-10 border-b border-border">
+                <tr>
+                  {result.columns.map((col, i) => (
+                    <th
+                      key={i}
+                      className="px-4 py-3 text-base font-semibold cursor-pointer hover:bg-border transition-colors group whitespace-nowrap"
+                      onClick={() => handleSort(i)}
                     >
-                      {cell}
-                    </td>
+                      <div className="flex items-center gap-1.5">
+                        <span>{col}</span>
+                        <SortIcon
+                          active={sortConfig?.key === i}
+                          direction={sortConfig?.direction}
+                        />
+                      </div>
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sortedRows.map((row, i) => (
+                  <tr
+                    key={i}
+                    className="border-b border-border/50 hover:bg-surface-hover/50 transition-colors"
+                  >
+                    {row.map((cell, j) => (
+                      <td
+                        key={j}
+                        className="px-4 py-3 text-base text-muted-foreground whitespace-nowrap"
+                      >
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      ) : (
+        <ReportChart result={result} />
+      )}
     </div>
   );
 }
