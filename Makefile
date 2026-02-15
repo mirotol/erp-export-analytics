@@ -1,9 +1,6 @@
 api-dev:
 	cd apps/api && air
 
-install-air:
-	go install github.com/air-verse/air@latest
-
 api-test:
 	cd apps/api && go test ./...
 

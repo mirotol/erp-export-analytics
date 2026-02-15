@@ -1,4 +1,4 @@
-package main
+package httpapi_test
 
 import (
 	"bytes"
@@ -9,9 +9,14 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"erp-export-analytics/api/internal/httpapi"
+	"erp-export-analytics/api/internal/reports"
 )
 
 func TestHandleUpload(t *testing.T) {
+	router := httpapi.NewRouter()
+
 	t.Run("successful upload", func(t *testing.T) {
 		body := &bytes.Buffer{}
 		writer := multipart.NewWriter(body)
@@ -26,13 +31,13 @@ func TestHandleUpload(t *testing.T) {
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		rr := httptest.NewRecorder()
 
-		handleUpload(rr, req)
+		router.ServeHTTP(rr, req)
 
 		if rr.Code != http.StatusCreated {
 			t.Errorf("expected status 201, got %d", rr.Code)
 		}
 
-		var resp UploadResponse
+		var resp httpapi.UploadResponse
 		if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
 			t.Fatal(err)
 		}
@@ -69,7 +74,7 @@ func TestHandleUpload(t *testing.T) {
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		rr := httptest.NewRecorder()
 
-		handleUpload(rr, req)
+		router.ServeHTTP(rr, req)
 
 		if rr.Code != http.StatusUnsupportedMediaType {
 			t.Errorf("expected status 415, got %d", rr.Code)
@@ -85,7 +90,7 @@ func TestHandleUpload(t *testing.T) {
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		rr := httptest.NewRecorder()
 
-		handleUpload(rr, req)
+		router.ServeHTTP(rr, req)
 
 		if rr.Code != http.StatusBadRequest {
 			t.Errorf("expected status 400, got %d", rr.Code)
@@ -107,13 +112,13 @@ func TestHandleUpload(t *testing.T) {
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		rr := httptest.NewRecorder()
 
-		handleUpload(rr, req)
+		router.ServeHTTP(rr, req)
 
 		if rr.Code != http.StatusCreated {
 			t.Errorf("expected status 201, got %d", rr.Code)
 		}
 
-		var resp UploadResponse
+		var resp httpapi.UploadResponse
 		if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
 			t.Fatal(err)
 		}
@@ -134,7 +139,7 @@ func TestHandleUpload(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/upload", nil)
 		rr := httptest.NewRecorder()
 
-		handleUpload(rr, req)
+		router.ServeHTTP(rr, req)
 
 		if rr.Code != http.StatusMethodNotAllowed {
 			t.Errorf("expected status 405, got %d", rr.Code)
@@ -142,21 +147,19 @@ func TestHandleUpload(t *testing.T) {
 	})
 
 	t.Run("cleanup and overridable temp dir with TTL", func(t *testing.T) {
-		oldDir := uploadTempDir
+		oldDir := httpapi.UploadTempDir
 		tmpDir := t.TempDir()
-		uploadTempDir = tmpDir
+		httpapi.SetUploadTempDir(tmpDir)
 
 		// Set very short TTL for testing
-		oldTTL := reportTTL
-		reportTTL = 0 * time.Second
+		oldTTL := reports.TTL
+		reports.SetTTL(0 * time.Second)
 		defer func() {
-			uploadTempDir = oldDir
-			reportTTL = oldTTL
+			httpapi.SetUploadTempDir(oldDir)
+			reports.SetTTL(oldTTL)
 
 			// Clean up any remaining reports after test
-			reportsMu.Lock()
-			reports = make(map[string]Report)
-			reportsMu.Unlock()
+			reports.ClearStore()
 		}()
 
 		body := &bytes.Buffer{}
@@ -172,7 +175,7 @@ func TestHandleUpload(t *testing.T) {
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		rr := httptest.NewRecorder()
 
-		handleUpload(rr, req)
+		router.ServeHTTP(rr, req)
 
 		if rr.Code != http.StatusCreated {
 			t.Errorf("expected status 201, got %d", rr.Code)
@@ -188,7 +191,7 @@ func TestHandleUpload(t *testing.T) {
 		}
 
 		// Run manual cleanup
-		cleanupExpiredReports()
+		reports.CleanupExpiredReports()
 
 		// Check if the directory is empty after manual cleanup
 		entries, err = os.ReadDir(tmpDir)
@@ -214,7 +217,7 @@ func TestHandleUpload(t *testing.T) {
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		rr := httptest.NewRecorder()
 
-		handleUpload(rr, req)
+		router.ServeHTTP(rr, req)
 
 		if rr.Code != http.StatusBadRequest {
 			t.Errorf("expected status 400 for empty csv, got %d", rr.Code)
@@ -235,188 +238,19 @@ func TestHandleUpload(t *testing.T) {
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		rr := httptest.NewRecorder()
 
-		handleUpload(rr, req)
+		router.ServeHTTP(rr, req)
 
 		if rr.Code != http.StatusCreated {
 			t.Errorf("expected status 201, got %d. Body: %s", rr.Code, rr.Body.String())
 		}
 
-		var resp UploadResponse
+		var resp httpapi.UploadResponse
 		if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
 			t.Fatal(err)
 		}
 
 		if len(resp.PreviewRows) != 2 {
 			t.Errorf("expected 2 preview rows, got %d", len(resp.PreviewRows))
-		}
-	})
-}
-
-func TestHandleHealth(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/health", nil)
-	rr := httptest.NewRecorder()
-
-	handleHealth(rr, req)
-
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", rr.Code)
-	}
-
-	var resp map[string]any
-	if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
-		t.Fatal(err)
-	}
-
-	if resp["status"] != "ok" {
-		t.Errorf("expected status ok, got %v", resp["status"])
-	}
-	if resp["time"] == nil {
-		t.Error("expected time to be present")
-	}
-}
-
-func TestHandleSamples(t *testing.T) {
-	t.Run("list samples", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/samples", nil)
-		rr := httptest.NewRecorder()
-
-		handleGetSamples(rr, req)
-
-		if rr.Code != http.StatusOK {
-			t.Errorf("expected status 200, got %d", rr.Code)
-		}
-
-		var resp []SampleFile
-		if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
-			t.Fatal(err)
-		}
-
-		if len(resp) != 2 {
-			t.Errorf("expected 2 samples, got %d", len(resp))
-		}
-
-		if resp[0].ID != "sample-invoices" {
-			t.Errorf("expected first sample to be sample-invoices, got %s", resp[0].ID)
-		}
-	})
-
-	t.Run("download sample", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/samples/sample-invoices", nil)
-		rr := httptest.NewRecorder()
-
-		handleDownloadSample(rr, req)
-
-		if rr.Code != http.StatusOK {
-			t.Errorf("expected status 200, got %d", rr.Code)
-		}
-
-		contentType := rr.Header().Get("Content-Type")
-		if contentType != "text/csv; charset=utf-8" {
-			t.Errorf("expected content type text/csv; charset=utf-8, got %s", contentType)
-		}
-
-		contentDisp := rr.Header().Get("Content-Disposition")
-		if contentDisp != "attachment; filename=\"sample-invoices.csv\"" {
-			t.Errorf("expected content disposition attachment; filename=\"sample-invoices.csv\", got %s", contentDisp)
-		}
-
-		if rr.Body.Len() == 0 {
-			t.Error("expected non-empty body")
-		}
-	})
-
-	t.Run("view sample", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/samples/sample-invoices?view", nil)
-		rr := httptest.NewRecorder()
-
-		handleDownloadSample(rr, req)
-
-		if rr.Code != http.StatusOK {
-			t.Errorf("expected status 200, got %d", rr.Code)
-		}
-
-		contentType := rr.Header().Get("Content-Type")
-		if contentType != "application/json; charset=utf-8" {
-			t.Errorf("expected content type application/json; charset=utf-8, got %s", contentType)
-		}
-
-		var resp UploadResponse
-		if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
-			t.Fatal(err)
-		}
-
-		if resp.FileName != "sample-invoices.csv" {
-			t.Errorf("expected filename sample-invoices.csv, got %s", resp.FileName)
-		}
-		if len(resp.Columns) == 0 {
-			t.Error("expected non-empty columns")
-		}
-		if len(resp.PreviewRows) == 0 {
-			t.Error("expected non-empty preview rows")
-		}
-	})
-
-	t.Run("unknown sample", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/samples/unknown", nil)
-		rr := httptest.NewRecorder()
-
-		handleDownloadSample(rr, req)
-
-		if rr.Code != http.StatusNotFound {
-			t.Errorf("expected status 404, got %d", rr.Code)
-		}
-	})
-}
-
-func TestHandleRunReport(t *testing.T) {
-	t.Run("run report on sample", func(t *testing.T) {
-		reqBody := map[string]any{
-			"groupBy": []string{"status"},
-			"metrics": []map[string]any{
-				{"op": "count"},
-				{"op": "sum", "field": "total"},
-			},
-			"filters": []map[string]any{
-				{"field": "currency", "op": "eq", "value": "USD"},
-			},
-			"limit": 5,
-		}
-		body, _ := json.Marshal(reqBody)
-		req := httptest.NewRequest(http.MethodPost, "/api/reports/sample-sample-invoices/run", bytes.NewReader(body))
-		rr := httptest.NewRecorder()
-
-		handleRunReport(rr, req)
-
-		if rr.Code != http.StatusOK {
-			t.Errorf("expected status 200, got %d. Body: %s", rr.Code, rr.Body.String())
-		}
-
-		var resp ReportResponse
-		if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
-			t.Fatal(err)
-		}
-
-		if len(resp.Columns) != 3 {
-			t.Errorf("expected 3 columns, got %d: %v", len(resp.Columns), resp.Columns)
-		}
-		if len(resp.Rows) == 0 {
-			t.Error("expected non-empty rows")
-		}
-	})
-
-	t.Run("report not found", func(t *testing.T) {
-		reqBody := map[string]any{
-			"groupBy": []string{},
-			"metrics": []map[string]any{{"op": "count"}},
-		}
-		body, _ := json.Marshal(reqBody)
-		req := httptest.NewRequest(http.MethodPost, "/api/reports/non-existent/run", bytes.NewReader(body))
-		rr := httptest.NewRecorder()
-
-		handleRunReport(rr, req)
-
-		if rr.Code != http.StatusNotFound {
-			t.Errorf("expected status 404, got %d", rr.Code)
 		}
 	})
 }
