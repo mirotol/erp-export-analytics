@@ -179,14 +179,14 @@ export function ReportChart({ result }: ReportChartProps) {
                 <XAxis
                   dataKey="name"
                   stroke="var(--muted)"
-                  fontSize={12}
+                  fontSize={14}
                   tickLine={false}
                   axisLine={false}
                   dy={10}
                 />
                 <YAxis
                   stroke="var(--muted)"
-                  fontSize={12}
+                  fontSize={14}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(value) =>
@@ -196,7 +196,7 @@ export function ReportChart({ result }: ReportChartProps) {
               </>
             )}
             <Tooltip
-              cursor={{ fill: "var(--white-05)" }}
+              cursor={{ fill: "var(--surface-elevated)" }}
               labelFormatter={formatTooltipLabel}
               contentStyle={{
                 backgroundColor: "var(--surface-elevated)",
