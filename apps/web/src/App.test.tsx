@@ -86,12 +86,11 @@ describe("App Happy Path", () => {
     expect(await screen.findByText(/Report Results/i)).toBeInTheDocument();
 
     // Table content from mocked report result
-    expect(await screen.findByText("sum(total)")).toBeInTheDocument();
+    expect(await screen.findAllByText("sum(total)")).toHaveLength(2); // One in dropdown, one in table header
     expect(screen.getByText("100.00")).toBeInTheDocument();
 
     // Switch to chart
-    const chartToggle =
-      screen.queryByRole("button", { name: /Chart/i }) ?? screen.getByLabelText(/Chart/i);
+    const chartToggle = screen.getByRole("button", { name: /Chart/i });
     fireEvent.click(chartToggle);
 
     await waitFor(() => {
@@ -101,12 +100,11 @@ describe("App Happy Path", () => {
     });
 
     // Switch back to table
-    const tableToggle =
-      screen.queryByRole("button", { name: /Table/i }) ?? screen.getByLabelText(/Table/i);
+    const tableToggle = screen.getByRole("button", { name: /Table/i });
     fireEvent.click(tableToggle);
 
     // Table content visible again
-    expect(await screen.findByText("sum(total)")).toBeInTheDocument();
+    expect(await screen.findAllByText("sum(total)")).toHaveLength(2);
     expect(screen.getByText("100.00")).toBeInTheDocument();
   });
 });
