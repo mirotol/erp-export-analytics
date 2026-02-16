@@ -22,8 +22,10 @@ export function UploadCard({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold mb-1">Upload Data</h2>
-        <p className="text-muted-foreground text-base">Select a CSV file to begin analysis.</p>
+        <h2 className="text-xl font-semibold mb-1 text-[var(--text-primary)]">Upload Data</h2>
+        <p className="text-[var(--text-secondary)] text-base">
+          Select a CSV file to begin analysis.
+        </p>
       </div>
 
       <Card className="max-w-3xl">
@@ -33,7 +35,7 @@ export function UploadCard({
           <SampleButtons samples={samples} onSelect={onSampleSelect} isLoading={isLoading} />
 
           {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex gap-3 items-center text-red-400">
+            <div className="p-4 bg-[var(--error-bg)] border border-[var(--error-border)] rounded-lg flex gap-3 items-center text-[var(--error)]">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <p className="text-base font-medium">{error}</p>
             </div>

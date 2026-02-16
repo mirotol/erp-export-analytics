@@ -95,9 +95,9 @@ export function ReportChart({ result }: ReportChartProps) {
 
   if (!canShowChart) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-surface border border-border rounded-xl">
-        <h3 className="text-lg font-medium text-foreground">Cannot render chart</h3>
-        <p className="text-muted-foreground mt-2 max-w-md">
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-[var(--surface)] border border-[var(--border)] rounded-xl">
+        <h3 className="text-lg font-medium text-[var(--text-primary)]">Cannot render chart</h3>
+        <p className="text-[var(--text-secondary)] mt-2 max-w-md">
           Charts require at least one "Group by" column and one numeric metric (Count or Sum).
         </p>
       </div>
@@ -107,9 +107,9 @@ export function ReportChart({ result }: ReportChartProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <label className="text-base font-medium text-muted-foreground">Metric:</label>
+        <label className="text-base font-medium text-[var(--text-secondary)]">Metric:</label>
         <select
-          className="bg-surface-hover border border-border rounded-lg px-3 py-1.5 text-base focus:ring-2 focus:ring-accent outline-none transition-all"
+          className="bg-[var(--surface-elevated)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-base focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all"
           value={selectedMetricIdx}
           onChange={(e) => setSelectedMetricIdx(parseInt(e.target.value))}
         >
@@ -121,7 +121,7 @@ export function ReportChart({ result }: ReportChartProps) {
         </select>
       </div>
 
-      <div className="h-[400px] w-full bg-surface border border-border rounded-xl p-6">
+      <div className="h-[400px] w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl p-6">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
@@ -135,7 +135,7 @@ export function ReportChart({ result }: ReportChartProps) {
           >
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="#27272a"
+              stroke="var(--white-08)"
               vertical={isHorizontal}
               horizontal={!isHorizontal}
             />
@@ -143,7 +143,7 @@ export function ReportChart({ result }: ReportChartProps) {
               <>
                 <XAxis
                   type="number"
-                  stroke="#a1a1aa"
+                  stroke="var(--muted)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -154,7 +154,7 @@ export function ReportChart({ result }: ReportChartProps) {
                 <YAxis
                   dataKey="name"
                   type="category"
-                  stroke="#a1a1aa"
+                  stroke="var(--muted)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -166,14 +166,14 @@ export function ReportChart({ result }: ReportChartProps) {
               <>
                 <XAxis
                   dataKey="name"
-                  stroke="#a1a1aa"
+                  stroke="var(--muted)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                   dy={10}
                 />
                 <YAxis
-                  stroke="#a1a1aa"
+                  stroke="var(--muted)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -184,19 +184,23 @@ export function ReportChart({ result }: ReportChartProps) {
               </>
             )}
             <Tooltip
-              cursor={{ fill: "#27272a", opacity: 0.4 }}
+              cursor={{ fill: "var(--white-05)" }}
               labelFormatter={formatTooltipLabel}
               contentStyle={{
-                backgroundColor: "#18181b",
-                border: "1px solid #27272a",
+                backgroundColor: "var(--surface-elevated)",
+                border: "1px solid var(--border)",
                 borderRadius: "8px",
-                color: "#fafafa",
+                color: "var(--text-primary)",
               }}
-              itemStyle={{ color: "#b530ca" }}
+              itemStyle={{ color: "var(--accent-hover)" }}
             />
             <Bar dataKey="value" radius={isHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]}>
               {chartData.map((_, index) => (
-                <Cell key={`cell-${index}`} fill="#b530ca" />
+                <Cell
+                  key={`cell-${index}`}
+                  fill="var(--accent)"
+                  className="hover:fill-[var(--accent-hover)] transition-colors duration-200"
+                />
               ))}
             </Bar>
           </BarChart>

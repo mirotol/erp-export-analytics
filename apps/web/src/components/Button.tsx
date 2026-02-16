@@ -24,9 +24,10 @@ export function Button({
   };
 
   const variants = {
-    primary: "bg-accent text-accent-foreground hover:opacity-90",
+    primary:
+      "bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)]",
     secondary:
-      "bg-surface-hover text-foreground hover:bg-border hover:border-accent/40 border border-border hover:text-accent shadow-sm hover:shadow-accent/10",
+      "bg-transparent text-[var(--text-primary)] border border-[var(--white-12)] hover:bg-[var(--white-05)]",
   };
 
   return (

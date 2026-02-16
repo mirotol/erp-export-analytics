@@ -52,11 +52,11 @@ export default function HomePage() {
       <div className="max-w-6xl mx-auto space-y-10">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-5xl font-bold tracking-tight text-foreground">
+            <h1 className="text-5xl font-bold tracking-tight text-[var(--text-primary)]">
               ERP Export Analytics{" "}
-              <span className="text-accent text-xl font-medium ml-2 opacity-80">(POC)</span>
+              <span className="text-[var(--accent)] text-xl font-medium ml-2">(POC)</span>
             </h1>
-            <p className="text-muted-foreground mt-3 text-xl">
+            <p className="text-[var(--text-secondary)] mt-3 text-xl">
               Streamlined CSV processing and preview tool.
             </p>
           </div>

@@ -23,14 +23,14 @@ function SortIcon({ active, direction }: { active: boolean; direction?: "asc" | 
   return (
     <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
       {!active ? (
-        <ChevronsUpDown className="w-6 h-6 text-muted-foreground/70 opacity-60 group-hover:opacity-100 transition-opacity" />
+        <ChevronsUpDown className="w-6 h-6 text-[var(--muted)] opacity-60 group-hover:opacity-100 transition-opacity" />
       ) : (
         <span className="flex flex-col -space-y-2.5">
           <ChevronUp
-            className={`w-5 h-5 ${direction === "asc" ? "text-accent" : "text-muted-foreground/60"}`}
+            className={`w-5 h-5 ${active && direction === "asc" ? "text-[var(--accent)]" : "text-[var(--muted)] opacity-60"}`}
           />
           <ChevronDown
-            className={`w-5 h-5 ${direction === "desc" ? "text-accent" : "text-muted-foreground/60"}`}
+            className={`w-5 h-5 ${active && direction === "desc" ? "text-[var(--accent)]" : "text-[var(--muted)] opacity-60"}`}
           />
         </span>
       )}
@@ -89,11 +89,11 @@ export function ReportResults({ result }: ReportResultsProps) {
   if (result.rows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <div className="w-16 h-16 bg-surface-hover rounded-full flex items-center justify-center mb-4">
-          <SearchX className="w-8 h-8 text-muted" />
+        <div className="w-16 h-16 bg-[var(--surface-elevated)] rounded-full flex items-center justify-center mb-4">
+          <SearchX className="w-8 h-8 text-[var(--muted)]" />
         </div>
-        <h3 className="text-lg font-medium">No results found</h3>
-        <p className="text-muted-foreground mt-1">No results match your filters.</p>
+        <h3 className="text-lg font-medium text-[var(--text-primary)]">No results found</h3>
+        <p className="text-[var(--text-secondary)] mt-1">No results match your filters.</p>
       </div>
     );
   }
@@ -101,15 +101,15 @@ export function ReportResults({ result }: ReportResultsProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold">Report Results</h3>
+        <h3 className="text-xl font-semibold text-[var(--text-primary)]">Report Results</h3>
         <div className="flex items-center gap-6">
-          <div className="flex items-center bg-surface border border-border rounded-lg p-1">
+          <div className="flex items-center bg-[var(--surface)] border border-[var(--border)] rounded-lg p-1">
             <button
               onClick={() => setView("table")}
               className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition-all ${
                 view === "table"
-                  ? "bg-surface-hover text-accent shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-[var(--surface-elevated)] text-[var(--accent)] shadow-sm"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               <TableIcon className="w-4 h-4" />
@@ -119,8 +119,8 @@ export function ReportResults({ result }: ReportResultsProps) {
               onClick={() => setView("chart")}
               className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition-all ${
                 view === "chart"
-                  ? "bg-surface-hover text-accent shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-[var(--surface-elevated)] text-[var(--accent)] shadow-sm"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               <BarChart3 className="w-4 h-4" />
@@ -128,7 +128,7 @@ export function ReportResults({ result }: ReportResultsProps) {
             </button>
           </div>
 
-          <div className="text-base text-muted-foreground flex gap-4">
+          <div className="text-base text-[var(--text-secondary)] flex gap-4">
             <span>{result.rows.length} groups</span>
             <span>{result.rowsScanned.toLocaleString()} rows scanned</span>
           </div>
@@ -136,15 +136,15 @@ export function ReportResults({ result }: ReportResultsProps) {
       </div>
 
       {view === "table" ? (
-        <div className="border border-border rounded-xl overflow-hidden bg-surface">
+        <div className="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--surface)]">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-surface-hover z-10 border-b border-border">
+              <thead className="sticky top-0 bg-[var(--surface-elevated)] z-10 border-b border-[var(--border)]">
                 <tr>
                   {result.columns.map((col, i) => (
                     <th
                       key={i}
-                      className="px-4 py-3 text-base font-semibold cursor-pointer hover:bg-border transition-colors group whitespace-nowrap"
+                      className="px-4 py-3 text-base font-semibold cursor-pointer hover:bg-[var(--white-08)] transition-colors group whitespace-nowrap text-[var(--text-primary)]"
                       onClick={() => handleSort(i)}
                     >
                       <div className="flex items-center gap-1.5">
@@ -158,16 +158,13 @@ export function ReportResults({ result }: ReportResultsProps) {
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-[var(--border-subtle)]">
                 {sortedRows.map((row, i) => (
-                  <tr
-                    key={i}
-                    className="border-b border-border/50 hover:bg-surface-hover/50 transition-colors"
-                  >
+                  <tr key={i} className="hover:bg-[var(--accent-hover-bg)] transition-colors">
                     {row.map((cell, j) => (
                       <td
                         key={j}
-                        className="px-4 py-3 text-base text-muted-foreground whitespace-nowrap"
+                        className="px-4 py-3 text-base text-[var(--text-secondary)] whitespace-nowrap"
                       >
                         {cell}
                       </td>
