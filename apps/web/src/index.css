@@ -9,9 +9,9 @@
   --border-subtle: rgba(255, 255, 255, 0.06);
 
   --accent: #4d21b3;
-  --accent-hover: #7a51d9;
-  --accent-active: #693ecb;
-  --accent-gradient: linear-gradient(135deg, #7a51d9 0%, #4d21b3 100%);
+  --accent-hover: #6c51d9;
+  --accent-active: #5f3ecb;
+  --accent-gradient: linear-gradient(135deg, #6c51d9 0%, #4d21b3 100%);
   --accent-glow: 0 0 12px rgba(135, 81, 227, 0.512);
   --accent-transparent: rgba(124, 58, 237, 0.1);
   --accent-hover-bg: rgba(124, 58, 237, 0.08);

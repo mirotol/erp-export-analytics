@@ -133,6 +133,18 @@ export function ReportChart({ result }: ReportChartProps) {
               bottom: isHorizontal ? 0 : 20,
             }}
           >
+            <defs>
+              <linearGradient
+                id="barGradient"
+                x1="0"
+                y1="0"
+                x2={isHorizontal ? "1" : "0"}
+                y2={isHorizontal ? "0" : "1"}
+              >
+                <stop offset="0%" stopColor="var(--accent-hover)" stopOpacity={1} />
+                <stop offset="100%" stopColor="var(--accent)" stopOpacity={1} />
+              </linearGradient>
+            </defs>
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="var(--white-08)"
@@ -198,7 +210,7 @@ export function ReportChart({ result }: ReportChartProps) {
               {chartData.map((_, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill="var(--accent)"
+                  fill="url(#barGradient)"
                   className="hover:fill-[var(--accent-hover)] transition-colors duration-200"
                 />
               ))}
