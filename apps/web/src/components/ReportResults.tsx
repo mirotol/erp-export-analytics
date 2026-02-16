@@ -40,6 +40,31 @@ function SortIcon({ active, direction }: { active: boolean; direction?: "asc" | 
 
 export function ReportResults({ result }: ReportResultsProps) {
   const [view, setView] = useState<"table" | "chart">("table");
+
+  // Identify numeric columns (metrics)
+  const numericColumnIndices = useMemo(() => {
+    return result.columns
+      .map((_, idx) => {
+        // First column is usually the group by column (string)
+        if (idx === 0) return -1;
+        // Check if values in this column are numeric
+        const isNumeric = result.rows.some((row) => !isNaN(parseFloat(row[idx])));
+        return isNumeric ? idx : -1;
+      })
+      .filter((idx) => idx !== -1);
+  }, [result.columns, result.rows]);
+
+  // Default metric selection
+  const [selectedMetricIdx, setSelectedMetricIdx] = useState(() => {
+    const sumIdx = result.columns.findIndex((c) => c.startsWith("sum("));
+    if (sumIdx !== -1 && numericColumnIndices.includes(sumIdx)) return sumIdx;
+
+    const countIdx = result.columns.findIndex((c) => c === "count");
+    if (countIdx !== -1 && numericColumnIndices.includes(countIdx)) return countIdx;
+
+    return numericColumnIndices.length > 0 ? numericColumnIndices[0] : -1;
+  });
+
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(() => {
     // Default sorting:
     // If sum metric exists -> sort descending by sum
@@ -100,56 +125,75 @@ export function ReportResults({ result }: ReportResultsProps) {
 
   return (
     <div className="space-y-4">
+      {/* Row 1: Context */}
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-semibold text-[var(--text-primary)]">Report Results</h3>
-        <div className="flex items-center gap-6">
-          <div className="inline-flex items-center bg-[var(--surface)] border border-[var(--border)] rounded-lg p-1 shadow-[var(--shadow-subtle)]">
-            <button
-              type="button"
-              onClick={() => setView("table")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                view === "table"
-                  ? "bg-[var(--surface-elevated)] text-[var(--text-primary)]"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              }`}
-              aria-pressed={view === "table"}
-            >
-              <TableIcon
-                className={`w-5 h-5 ${
-                  view === "table" ? "text-[var(--accent)]" : "text-[var(--muted)]"
-                }`}
-                strokeWidth={1.75}
-              />
-              Table
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setView("chart")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                view === "chart"
-                  ? "bg-[var(--surface-elevated)] text-[var(--text-primary)]"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              }`}
-              aria-pressed={view === "chart"}
-            >
-              <BarChart3
-                className={`w-5 h-5 ${
-                  view === "chart" ? "text-[var(--accent)]" : "text-[var(--muted)]"
-                }`}
-                strokeWidth={2.25}
-              />
-              Chart
-            </button>
-          </div>
-
-          <div className="text-base text-[var(--text-secondary)] flex gap-4">
-            <span>{result.rows.length} groups</span>
-            <span>{result.rowsScanned.toLocaleString()} rows scanned</span>
-          </div>
+        <div className="text-base text-[var(--text-secondary)] flex gap-4">
+          <span>
+            {result.rows.length} groups • {result.rowsScanned.toLocaleString()} rows scanned
+          </span>
         </div>
       </div>
 
+      {/* Row 2: Controls */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <label className="text-base font-medium text-[var(--text-secondary)]">Metric</label>
+          <select
+            className="bg-[var(--surface-elevated)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-base focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all"
+            value={selectedMetricIdx}
+            onChange={(e) => setSelectedMetricIdx(parseInt(e.target.value))}
+          >
+            {numericColumnIndices.map((idx) => (
+              <option key={idx} value={idx}>
+                {result.columns[idx]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="inline-flex items-center bg-[var(--surface)] border border-[var(--border)] rounded-lg p-1 shadow-[var(--shadow-subtle)]">
+          <button
+            type="button"
+            onClick={() => setView("table")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              view === "table"
+                ? "bg-[var(--surface-elevated)] text-[var(--text-primary)]"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            }`}
+            aria-pressed={view === "table"}
+          >
+            <TableIcon
+              className={`w-5 h-5 ${
+                view === "table" ? "text-[var(--accent)]" : "text-[var(--muted)]"
+              }`}
+              strokeWidth={1.75}
+            />
+            Table
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setView("chart")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              view === "chart"
+                ? "bg-[var(--surface-elevated)] text-[var(--text-primary)]"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            }`}
+            aria-pressed={view === "chart"}
+          >
+            <BarChart3
+              className={`w-5 h-5 ${
+                view === "chart" ? "text-[var(--accent)]" : "text-[var(--muted)]"
+              }`}
+              strokeWidth={2.25}
+            />
+            Chart
+          </button>
+        </div>
+      </div>
+
+      {/* Row 3: Visualization */}
       {view === "table" ? (
         <div className="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--surface)]">
           <div className="overflow-x-auto">
@@ -191,7 +235,7 @@ export function ReportResults({ result }: ReportResultsProps) {
           </div>
         </div>
       ) : (
-        <ReportChart result={result} />
+        <ReportChart result={result} selectedMetricIdx={selectedMetricIdx} />
       )}
     </div>
   );

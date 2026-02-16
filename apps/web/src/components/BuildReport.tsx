@@ -45,8 +45,9 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
     setResult(null);
     setError(null);
 
-    let loadingTimer: number | undefined;
-    loadingTimer = window.setTimeout(() => setIsLoading(true), 150);
+    const loadingTimer = window.setTimeout(() => {
+      setIsLoading(true);
+    }, 150);
 
     try {
       const config: ReportConfig = {
