@@ -192,7 +192,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
                   variant="secondary"
                   size="sm"
                   onClick={handleClearFilter}
-                  className="h-7 px-2 text-xs opacity-70 hover:opacity-100"
+                  className="h-7 px-2 text-xs opacity-80 hover:opacity-100"
                 >
                   Clear filter
                 </Button>

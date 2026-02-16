@@ -16,7 +16,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    "rounded-lg font-medium transition-all focus:ring-2 focus:ring-accent focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors";
+    "rounded-lg font-medium transition-all focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none active:ring-2 active:ring-accent disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors";
 
   const sizes = {
     sm: "px-3 py-1.5 text-base",
