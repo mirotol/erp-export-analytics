@@ -4,6 +4,7 @@ import { ReportPreview } from "../components/ReportPreview";
 import { BuildReport } from "../components/BuildReport";
 import type { SampleFile, UploadResult } from "../lib/api";
 import { fetchSamples, fetchSamplePreview, uploadFile } from "../lib/api";
+import { withSmartLoading } from "../lib/loading";
 
 export default function HomePage() {
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
@@ -18,31 +19,37 @@ export default function HomePage() {
   }, []);
 
   async function handleSampleSelect(sampleId: string) {
-    setIsLoading(true);
     setErr(null);
     setUploadResult(null);
 
+    let loadingTimer: number | undefined;
+    loadingTimer = window.setTimeout(() => setIsLoading(true), 150);
+
     try {
-      const result = await fetchSamplePreview(sampleId);
+      const result = await withSmartLoading(fetchSamplePreview(sampleId));
       setUploadResult(result);
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
+      window.clearTimeout(loadingTimer);
       setIsLoading(false);
     }
   }
 
   async function handleFileUpload(file: File) {
-    setIsLoading(true);
     setErr(null);
     setUploadResult(null);
 
+    let loadingTimer: number | undefined;
+    loadingTimer = window.setTimeout(() => setIsLoading(true), 150);
+
     try {
-      const result = await uploadFile(file);
+      const result = await withSmartLoading(uploadFile(file));
       setUploadResult(result);
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
+      window.clearTimeout(loadingTimer);
       setIsLoading(false);
     }
   }
@@ -53,8 +60,7 @@ export default function HomePage() {
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h1 className="text-5xl font-bold tracking-tight text-[var(--text-primary)]">
-              ERP Export Analytics{" "}
-              <span className="text-[var(--accent)] text-xl font-medium ml-2">(POC)</span>
+              ERP Export Analytics
             </h1>
             <p className="text-[var(--text-secondary)] mt-3 text-xl">
               Streamlined CSV processing and preview tool.

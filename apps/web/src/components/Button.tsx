@@ -12,6 +12,7 @@ export function Button({
   size = "md",
   isLoading,
   className = "",
+  style,
   disabled,
   ...props
 }: ButtonProps) {
@@ -25,7 +26,11 @@ export function Button({
 
   const variants = {
     primary:
-      "bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)]",
+      "text-white transition-all duration-150 ease-out " +
+      "opacity-90 hover:opacity-100 " +
+      "active:opacity-90 active:translate-y-[1px] " +
+      "disabled:opacity-40 disabled:cursor-not-allowed " +
+      "hover:shadow-[var(--accent-glow)]",
     secondary:
       "bg-transparent text-[var(--text-primary)] border border-[var(--white-12)] hover:bg-[var(--white-05)]",
   };
@@ -34,6 +39,15 @@ export function Button({
     <button
       className={`${baseStyles} ${sizes[size]} ${variants[variant]} ${className}`}
       disabled={disabled || isLoading}
+      style={{
+        ...(variant === "primary"
+          ? {
+              backgroundColor: "var(--accent)",
+              backgroundImage: "var(--accent-gradient)",
+            }
+          : {}),
+        ...style,
+      }}
       {...props}
     >
       {isLoading && <Loader2 className="animate-spin h-5 w-5 text-current" />}

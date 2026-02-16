@@ -103,27 +103,42 @@ export function ReportResults({ result }: ReportResultsProps) {
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-semibold text-[var(--text-primary)]">Report Results</h3>
         <div className="flex items-center gap-6">
-          <div className="flex items-center bg-[var(--surface)] border border-[var(--border)] rounded-lg p-1">
+          <div className="inline-flex items-center bg-[var(--surface)] border border-[var(--border)] rounded-lg p-1 shadow-[var(--shadow-subtle)]">
             <button
+              type="button"
               onClick={() => setView("table")}
-              className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 view === "table"
-                  ? "bg-[var(--surface-elevated)] text-[var(--accent)] shadow-sm"
+                  ? "bg-[var(--surface-elevated)] text-[var(--text-primary)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
+              aria-pressed={view === "table"}
             >
-              <TableIcon className="w-4 h-4" />
+              <TableIcon
+                className={`w-5 h-5 ${
+                  view === "table" ? "text-[var(--accent)]" : "text-[var(--muted)]"
+                }`}
+                strokeWidth={1.75}
+              />
               Table
             </button>
+
             <button
+              type="button"
               onClick={() => setView("chart")}
-              className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 view === "chart"
-                  ? "bg-[var(--surface-elevated)] text-[var(--accent)] shadow-sm"
+                  ? "bg-[var(--surface-elevated)] text-[var(--text-primary)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
+              aria-pressed={view === "chart"}
             >
-              <BarChart3 className="w-4 h-4" />
+              <BarChart3
+                className={`w-5 h-5 ${
+                  view === "chart" ? "text-[var(--accent)]" : "text-[var(--muted)]"
+                }`}
+                strokeWidth={2.25}
+              />
               Chart
             </button>
           </div>

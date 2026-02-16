@@ -2,6 +2,7 @@ import { useState } from "react";
 import { LayoutList, Info, BarChart3, Filter, AlertCircle } from "lucide-react";
 import type { UploadResult, ReportResult, ReportConfig } from "../lib/api";
 import { runReport } from "../lib/api";
+import { withSmartLoading } from "../lib/loading";
 import { Card } from "./Card";
 import { Button } from "./Button";
 import { ReportResults } from "./ReportResults";
@@ -41,8 +42,12 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
   });
 
   const handleRun = async () => {
-    setIsLoading(true);
+    setResult(null);
     setError(null);
+
+    let loadingTimer: number | undefined;
+    loadingTimer = window.setTimeout(() => setIsLoading(true), 150);
+
     try {
       const config: ReportConfig = {
         groupBy: groupBy ? [groupBy] : [],
@@ -61,11 +66,12 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
         config.filters.push({ field: filterField, op: filterOp, value: filterValue });
       }
 
-      const res = await runReport(uploadResult.reportId, config);
+      const res = await withSmartLoading(runReport(uploadResult.reportId, config));
       setResult(res);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to run report");
     } finally {
+      window.clearTimeout(loadingTimer);
       setIsLoading(false);
     }
   };
@@ -88,7 +94,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
             {/* Group By */}
             <div className="space-y-3">
               <label className="text-base font-medium text-[var(--text-secondary)] flex items-center gap-2">
-                <LayoutList className="w-5 h-5 text-[var(--accent)]" />
+                <LayoutList className="w-5 h-5 text-[var(--text-secondar)]" />
                 Group by
               </label>
               <select
@@ -114,7 +120,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
             {/* Metrics */}
             <div className="space-y-3">
               <label className="text-base font-medium text-[var(--text-secondary)] flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-[var(--accent)]" />
+                <BarChart3 className="w-5 h-5 text-[var(--text-secondary)]" />
                 Metrics
               </label>
               <div className="space-y-4">
@@ -185,7 +191,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
             <div className="space-y-3 lg:col-span-1">
               <div className="flex items-center justify-between">
                 <label className="text-base font-medium text-[var(--text-secondary)] flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-[var(--accent)]" />
+                  <Filter className="w-5 h-5 text-[var(--text-secondary)]" />
                   Filter
                 </label>
                 <Button
