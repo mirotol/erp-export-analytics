@@ -1,12 +1,5 @@
 import { useState, useMemo } from "react";
-import {
-  ChevronUp,
-  ChevronDown,
-  ChevronsUpDown,
-  SearchX,
-  Table as TableIcon,
-  BarChart3,
-} from "lucide-react";
+import { ChevronUp, ChevronDown, SearchX, Table as TableIcon, BarChart3 } from "lucide-react";
 import type { ReportResult } from "../lib/api";
 import { ReportChart } from "./ReportChart";
 
@@ -21,18 +14,15 @@ type SortConfig = {
 
 function SortIcon({ active, direction }: { active: boolean; direction?: "asc" | "desc" }) {
   return (
-    <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-      {!active ? (
-        <ChevronsUpDown className="w-6 h-6 text-[var(--muted)] opacity-60 group-hover:opacity-100 transition-opacity" />
+    <div
+      className={`w-5 h-5 flex items-center justify-center flex-shrink-0 text-[var(--text-primary)] transition-opacity ${
+        active ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      {direction === "asc" ? (
+        <ChevronUp className="w-5 h-5" strokeWidth={2.5} />
       ) : (
-        <span className="flex flex-col -space-y-2.5">
-          <ChevronUp
-            className={`w-5 h-5 ${active && direction === "asc" ? "text-[var(--accent)]" : "text-[var(--muted)] opacity-60"}`}
-          />
-          <ChevronDown
-            className={`w-5 h-5 ${active && direction === "desc" ? "text-[var(--accent)]" : "text-[var(--muted)] opacity-60"}`}
-          />
-        </span>
+        <ChevronDown className="w-5 h-5" strokeWidth={2.5} />
       )}
     </div>
   );
@@ -158,7 +148,7 @@ export function ReportResults({ result }: ReportResultsProps) {
             onClick={() => setView("table")}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
               view === "table"
-                ? "bg-[var(--surface-elevated)] text-[var(--text-primary)]"
+                ? "bg-[var(--surface-elevated)] text-[var(--text-primary)] ring-1 ring-[var(--border)]"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
             aria-pressed={view === "table"}
@@ -177,7 +167,7 @@ export function ReportResults({ result }: ReportResultsProps) {
             onClick={() => setView("chart")}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
               view === "chart"
-                ? "bg-[var(--surface-elevated)] text-[var(--text-primary)]"
+                ? "bg-[var(--surface-elevated)] text-[var(--text-primary)] ring-1 ring-[var(--border)]"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
             aria-pressed={view === "chart"}
