@@ -6,7 +6,7 @@ type Theme = "dark" | "light";
 export function ThemeSelector() {
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem("theme");
-    return (saved as Theme) || "dark";
+    return (saved as Theme) || "light";
   });
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -27,8 +27,8 @@ export function ThemeSelector() {
   }, []);
 
   const themes: { id: Theme; label: string }[] = [
-    { id: "dark", label: "Dark (Gengar)" },
     { id: "light", label: "Light (Snorlax)" },
+    { id: "dark", label: "Dark (Gengar)" },
   ];
 
   return (
