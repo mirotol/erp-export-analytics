@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 :root {
-  /* Gengar-inspired Dark Theme */
   --background: #0b0b12;
   --surface: #141420;
   --surface-elevated: #1a1a2b;
@@ -48,6 +47,50 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+[data-theme="light"] {
+  /* Snorlax-inspired Light Theme */
+  /* Colors provided: 6096AA 29738F F1E5D8 CEC2B8 7F6F62 */
+  --background: #f1e5d8;
+  --surface: #cec2b8;
+  --surface-elevated: #dcd1c7;
+  --border: rgba(127, 111, 98, 0.15);
+  --border-subtle: rgba(127, 111, 98, 0.1);
+
+  --accent: #29738f;
+  --accent-hover: #6096aa;
+  --accent-active: #1f5a70;
+  --accent-gradient: linear-gradient(135deg, #6096aa 0%, #29738f 100%);
+  --accent-glow: 0 0 12px rgba(96, 150, 170, 0.3);
+  --accent-transparent: rgba(41, 115, 143, 0.1);
+  --accent-hover-bg: rgba(41, 115, 143, 0.08);
+  --accent-selection: rgba(41, 115, 143, 0.15);
+
+  --text-primary: #3d342d;
+  --text-secondary: #7f6f62;
+  --muted: rgba(127, 111, 98, 0.6);
+
+  --error: #d94e4e;
+  --error-bg: rgba(217, 78, 78, 0.1);
+  --error-border: rgba(217, 78, 78, 0.2);
+
+  --warning: #cc8400;
+  --warning-muted: rgba(204, 132, 0, 0.8);
+
+  --white-02: rgba(255, 255, 255, 0.2);
+  --white-05: rgba(255, 255, 255, 0.4);
+  --white-08: rgba(255, 255, 255, 0.6);
+  --white-12: rgba(255, 255, 255, 0.8);
+
+  --selection: rgba(96, 150, 170, 0.3);
+  --shadow-subtle: 0 4px 20px rgba(127, 111, 98, 0.2);
+
+  color-scheme: light;
 }
 
 @theme {
