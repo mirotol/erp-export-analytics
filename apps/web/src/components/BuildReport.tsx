@@ -2,6 +2,7 @@ import { useState } from "react";
 import { LayoutList, Info, BarChart3, Filter, AlertCircle } from "lucide-react";
 import type { UploadResult, ReportResult, ReportConfig } from "../lib/api";
 import { runReport } from "../lib/api";
+import { withSmartLoading } from "../lib/loading";
 import { Card } from "./Card";
 import { Button } from "./Button";
 import { ReportResults } from "./ReportResults";
@@ -41,8 +42,13 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
   });
 
   const handleRun = async () => {
-    setIsLoading(true);
+    setResult(null);
     setError(null);
+
+    const loadingTimer = window.setTimeout(() => {
+      setIsLoading(true);
+    }, 150);
+
     try {
       const config: ReportConfig = {
         groupBy: groupBy ? [groupBy] : [],
@@ -61,11 +67,12 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
         config.filters.push({ field: filterField, op: filterOp, value: filterValue });
       }
 
-      const res = await runReport(uploadResult.reportId, config);
+      const res = await withSmartLoading(runReport(uploadResult.reportId, config));
       setResult(res);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to run report");
     } finally {
+      window.clearTimeout(loadingTimer);
       setIsLoading(false);
     }
   };
@@ -76,12 +83,10 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
     setFilterValue("");
   };
 
-  const isFilterEmpty = !filterField && filterOp === "eq" && !filterValue;
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Build Report</h2>
+        <h2 className="text-xl font-semibold text-[var(--text-primary)]">Build Report</h2>
       </div>
 
       <Card>
@@ -89,12 +94,12 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Group By */}
             <div className="space-y-3">
-              <label className="text-base font-medium text-muted-foreground flex items-center gap-2">
-                <LayoutList className="w-5 h-5 text-accent" />
+              <label className="text-base font-medium text-[var(--text-secondary)] flex items-center gap-2">
+                <LayoutList className="w-5 h-5 text-[var(--text-secondar)]" />
                 Group by
               </label>
               <select
-                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-accent outline-none transition-all"
+                className="w-full bg-[var(--surface-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all"
                 value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value)}
               >
@@ -106,7 +111,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
                 ))}
               </select>
               {groupBy && highUniquenessColumns.includes(groupBy) && (
-                <p className="text-s text-amber-400/80 ml-1 flex items-center gap-2">
+                <p className="text-s text-[var(--warning-muted)] ml-1 flex items-center gap-2">
                   <Info className="w-7 h-7" />
                   This column appears to contain mostly unique values.
                 </p>
@@ -115,8 +120,8 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
 
             {/* Metrics */}
             <div className="space-y-3">
-              <label className="text-base font-medium text-muted-foreground flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-accent" />
+              <label className="text-base font-medium text-[var(--text-secondary)] flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-[var(--text-secondary)]" />
                 Metrics
               </label>
               <div className="space-y-4">
@@ -128,10 +133,10 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
                       onChange={(e) => setIncludeCount(e.target.checked)}
                       className="peer sr-only"
                     />
-                    <div className="w-10 h-5 bg-border rounded-full peer peer-checked:bg-accent transition-colors"></div>
+                    <div className="w-10 h-5 bg-[var(--border)] rounded-full peer peer-checked:bg-[var(--accent)] transition-colors"></div>
                     <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
                   </div>
-                  <span className="text-base group-hover:text-foreground transition-colors">
+                  <span className="text-base text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
                     Count rows
                   </span>
                 </label>
@@ -145,10 +150,10 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
                         onChange={(e) => setUseSum(e.target.checked)}
                         className="peer sr-only"
                       />
-                      <div className="w-10 h-5 bg-border rounded-full peer peer-checked:bg-accent transition-colors"></div>
+                      <div className="w-10 h-5 bg-[var(--border)] rounded-full peer peer-checked:bg-[var(--accent)] transition-colors"></div>
                       <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
                     </div>
-                    <span className="text-base group-hover:text-foreground transition-colors">
+                    <span className="text-base text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
                       Sum field
                     </span>
                   </label>
@@ -156,7 +161,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
                   {useSum && (
                     <div className="space-y-1">
                       <select
-                        className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-accent outline-none disabled:opacity-50"
+                        className="w-full bg-[var(--surface-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-[var(--accent)] outline-none disabled:opacity-50"
                         value={sumField}
                         onChange={(e) => setSumField(e.target.value)}
                         disabled={numericColumns.length === 0}
@@ -186,16 +191,15 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
             {/* Filter */}
             <div className="space-y-3 lg:col-span-1">
               <div className="flex items-center justify-between">
-                <label className="text-base font-medium text-muted-foreground flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-accent" />
+                <label className="text-base font-medium text-[var(--text-secondary)] flex items-center gap-2">
+                  <Filter className="w-5 h-5 text-[var(--text-secondary)]" />
                   Filter
                 </label>
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={handleClearFilter}
-                  disabled={isFilterEmpty}
-                  className="h-7 px-2 text-xs opacity-70 hover:opacity-100"
+                  className="h-7 px-2 text-xs opacity-80 hover:opacity-100"
                 >
                   Clear filter
                 </Button>
@@ -203,7 +207,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <select
-                    className="flex-1 bg-surface-hover border border-border rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-accent outline-none"
+                    className="flex-1 bg-[var(--surface-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-[var(--accent)] outline-none"
                     value={filterField}
                     onChange={(e) => setFilterField(e.target.value)}
                   >
@@ -215,7 +219,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
                     ))}
                   </select>
                   <select
-                    className="w-28 bg-surface-hover border border-border rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-accent outline-none"
+                    className="w-28 bg-[var(--surface-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-[var(--accent)] outline-none"
                     value={filterOp}
                     onChange={(e) => setFilterOp(e.target.value as "eq" | "contains")}
                   >
@@ -226,7 +230,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
                 <input
                   type="text"
                   placeholder="Filter value..."
-                  className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-accent outline-none"
+                  className="w-full bg-[var(--surface-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-[var(--accent)] outline-none"
                   value={filterValue}
                   onChange={(e) => setFilterValue(e.target.value)}
                 />
@@ -234,7 +238,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 pt-4 border-t border-border/50">
+          <div className="flex flex-col gap-4 pt-4 border-t border-[var(--border-subtle)]">
             <Button
               onClick={handleRun}
               isLoading={isLoading}
@@ -244,7 +248,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
             </Button>
 
             {error && (
-              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-base rounded-lg flex items-center gap-3">
+              <div className="p-4 bg-[var(--error-bg)] border border-[var(--error-border)] text-[var(--error)] text-base rounded-lg flex items-center gap-3">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 {error}
               </div>

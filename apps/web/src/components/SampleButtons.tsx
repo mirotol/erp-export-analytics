@@ -11,8 +11,10 @@ export function SampleButtons({ samples, onSelect, isLoading }: SampleButtonsPro
   if (samples.length === 0) return null;
 
   return (
-    <div className="pt-4 border-t border-border">
-      <p className="text-base font-medium mb-3">Or try with sample data:</p>
+    <div className="pt-4 border-t border-[var(--border)]">
+      <p className="text-base font-medium mb-3 text-[var(--text-primary)]">
+        Or try with sample data:
+      </p>
       <div className="flex flex-wrap gap-3">
         {samples.map((sample) => (
           <Button

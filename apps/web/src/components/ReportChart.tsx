@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -11,11 +11,13 @@ import {
 } from "recharts";
 import type { ReportResult } from "../lib/api";
 
-interface ReportChartProps {
+export function ReportChart({
+  result,
+  selectedMetricIdx,
+}: {
   result: ReportResult;
-}
-
-export function ReportChart({ result }: ReportChartProps) {
+  selectedMetricIdx: number;
+}) {
   // 1. Identify numeric columns (metrics)
   const numericColumnIndices = useMemo(() => {
     return result.columns
@@ -28,17 +30,6 @@ export function ReportChart({ result }: ReportChartProps) {
       })
       .filter((idx) => idx !== -1);
   }, [result.columns, result.rows]);
-
-  // 2. Default metric selection
-  const [selectedMetricIdx, setSelectedMetricIdx] = useState(() => {
-    const sumIdx = result.columns.findIndex((c) => c.startsWith("sum("));
-    if (sumIdx !== -1 && numericColumnIndices.includes(sumIdx)) return sumIdx;
-
-    const countIdx = result.columns.findIndex((c) => c === "count");
-    if (countIdx !== -1 && numericColumnIndices.includes(countIdx)) return countIdx;
-
-    return numericColumnIndices.length > 0 ? numericColumnIndices[0] : -1;
-  });
 
   // 3. Prepare data
   const chartData = useMemo(() => {
@@ -95,9 +86,9 @@ export function ReportChart({ result }: ReportChartProps) {
 
   if (!canShowChart) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-surface border border-border rounded-xl">
-        <h3 className="text-lg font-medium text-foreground">Cannot render chart</h3>
-        <p className="text-muted-foreground mt-2 max-w-md">
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-[var(--surface)] border border-[var(--border)] rounded-xl">
+        <h3 className="text-lg font-medium text-[var(--text-primary)]">Cannot render chart</h3>
+        <p className="text-[var(--text-secondary)] mt-2 max-w-md">
           Charts require at least one "Group by" column and one numeric metric (Count or Sum).
         </p>
       </div>
@@ -105,103 +96,102 @@ export function ReportChart({ result }: ReportChartProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <label className="text-base font-medium text-muted-foreground">Metric:</label>
-        <select
-          className="bg-surface-hover border border-border rounded-lg px-3 py-1.5 text-base focus:ring-2 focus:ring-accent outline-none transition-all"
-          value={selectedMetricIdx}
-          onChange={(e) => setSelectedMetricIdx(parseInt(e.target.value))}
+    <div className="h-[400px] w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl p-6">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={chartData}
+          layout={isHorizontal ? "vertical" : "horizontal"}
+          margin={{
+            top: 10,
+            right: 30,
+            left: isHorizontal ? 40 : 0,
+            bottom: isHorizontal ? 0 : 20,
+          }}
         >
-          {numericColumnIndices.map((idx) => (
-            <option key={idx} value={idx}>
-              {result.columns[idx]}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="h-[400px] w-full bg-surface border border-border rounded-xl p-6">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={chartData}
-            layout={isHorizontal ? "vertical" : "horizontal"}
-            margin={{
-              top: 10,
-              right: 30,
-              left: isHorizontal ? 40 : 0,
-              bottom: isHorizontal ? 0 : 20,
+          <defs>
+            <linearGradient
+              id="barGradient"
+              x1="0"
+              y1="0"
+              x2={isHorizontal ? "1" : "0"}
+              y2={isHorizontal ? "0" : "1"}
+            >
+              <stop offset="0%" stopColor="var(--accent-hover)" stopOpacity={1} />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity={1} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="var(--white-08)"
+            vertical={isHorizontal}
+            horizontal={!isHorizontal}
+          />
+          {isHorizontal ? (
+            <>
+              <XAxis
+                type="number"
+                stroke="var(--muted)"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) =>
+                  value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString()
+                }
+              />
+              <YAxis
+                dataKey="name"
+                type="category"
+                stroke="var(--muted)"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+                width={isHorizontal ? 100 : 60}
+                tickFormatter={formatLabel}
+              />
+            </>
+          ) : (
+            <>
+              <XAxis
+                dataKey="name"
+                stroke="var(--muted)"
+                fontSize={14}
+                tickLine={false}
+                axisLine={false}
+                dy={10}
+              />
+              <YAxis
+                stroke="var(--muted)"
+                fontSize={14}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) =>
+                  value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString()
+                }
+              />
+            </>
+          )}
+          <Tooltip
+            cursor={{ fill: "var(--surface-elevated)" }}
+            labelFormatter={formatTooltipLabel}
+            contentStyle={{
+              backgroundColor: "var(--surface-elevated)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              color: "var(--text-primary)",
             }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="#27272a"
-              vertical={isHorizontal}
-              horizontal={!isHorizontal}
-            />
-            {isHorizontal ? (
-              <>
-                <XAxis
-                  type="number"
-                  stroke="#a1a1aa"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) =>
-                    value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString()
-                  }
-                />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  stroke="#a1a1aa"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  width={isHorizontal ? 100 : 60}
-                  tickFormatter={formatLabel}
-                />
-              </>
-            ) : (
-              <>
-                <XAxis
-                  dataKey="name"
-                  stroke="#a1a1aa"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  dy={10}
-                />
-                <YAxis
-                  stroke="#a1a1aa"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) =>
-                    value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString()
-                  }
-                />
-              </>
-            )}
-            <Tooltip
-              cursor={{ fill: "#27272a", opacity: 0.4 }}
-              labelFormatter={formatTooltipLabel}
-              contentStyle={{
-                backgroundColor: "#18181b",
-                border: "1px solid #27272a",
-                borderRadius: "8px",
-                color: "#fafafa",
-              }}
-              itemStyle={{ color: "#b530ca" }}
-            />
-            <Bar dataKey="value" radius={isHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]}>
-              {chartData.map((_, index) => (
-                <Cell key={`cell-${index}`} fill="#b530ca" />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+            itemStyle={{ color: "var(--accent-hover)" }}
+          />
+          <Bar dataKey="value" radius={isHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]}>
+            {chartData.map((_, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill="url(#barGradient)"
+                className="hover:fill-[var(--accent-hover)] transition-colors duration-200"
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }
