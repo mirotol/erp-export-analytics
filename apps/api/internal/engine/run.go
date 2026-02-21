@@ -156,9 +156,7 @@ func RunReport(filePath string, req ReportRequest) (ReportResponse, error) {
 
 	// Prepare response
 	respColumns := []string{}
-	for _, gb := range req.GroupBy {
-		respColumns = append(respColumns, gb)
-	}
+	respColumns = append(respColumns, req.GroupBy...)
 	for _, m := range req.Metrics {
 		colName := m.Op
 		if m.Field != "" {
