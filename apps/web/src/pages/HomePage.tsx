@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { UploadCard } from "../components/UploadCard";
 import { ReportPreview } from "../components/ReportPreview";
 import { BuildReport } from "../components/BuildReport";
+import { ThemeSelector } from "../components/ThemeSelector";
 import type { SampleFile, UploadResult } from "../lib/api";
 import { fetchSamples, fetchSamplePreview, uploadFile } from "../lib/api";
 import { withSmartLoading } from "../lib/loading";
@@ -59,7 +60,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[var(--background)] p-6 md:p-12">
       <div className="max-w-6xl mx-auto space-y-10">
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <header className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div>
             <h1 className="text-5xl font-bold tracking-tight text-[var(--text-primary)]">
               ERP Export Analytics
@@ -67,6 +68,9 @@ export default function HomePage() {
             <p className="text-[var(--text-secondary)] mt-3 text-xl">
               Streamlined CSV processing and preview tool.
             </p>
+          </div>
+          <div className="flex justify-end">
+            <ThemeSelector />
           </div>
         </header>
 
