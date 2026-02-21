@@ -34,18 +34,18 @@ export function ReportResults({ result }: ReportResultsProps) {
   // Identify numeric columns (metrics)
   const numericColumnIndices = useMemo(() => {
     return result.columns
-      .map((_, idx) => {
-        // First column is usually the group by column (string)
-        if (idx === 0) return -1;
-        // Check if values in this column are numeric
-        const isNumeric = result.rows.some((row) => !isNaN(parseFloat(row[idx])));
-        return isNumeric ? idx : -1;
+      .map((col, idx) => {
+        const isMetric = col === "count" || col.startsWith("sum(") || col.startsWith("avg(");
+        return isMetric ? idx : -1;
       })
       .filter((idx) => idx !== -1);
-  }, [result.columns, result.rows]);
+  }, [result.columns]);
 
   // Default metric selection
   const [selectedMetricIdx, setSelectedMetricIdx] = useState(() => {
+    const avgIdx = result.columns.findIndex((c) => c.startsWith("avg("));
+    if (avgIdx !== -1 && numericColumnIndices.includes(avgIdx)) return avgIdx;
+
     const sumIdx = result.columns.findIndex((c) => c.startsWith("sum("));
     if (sumIdx !== -1 && numericColumnIndices.includes(sumIdx)) return sumIdx;
 
@@ -57,10 +57,13 @@ export function ReportResults({ result }: ReportResultsProps) {
 
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(() => {
     // Default sorting:
-    // If sum metric exists -> sort descending by sum
+    // If avg metric exists -> sort descending by avg
+    // Else if sum metric exists -> sort descending by sum
     // Else -> sort descending by count
 
-    // Sum columns usually look like "sum(column)"
+    const avgIdx = result.columns.findIndex((c) => c.startsWith("avg("));
+    if (avgIdx !== -1) return { key: avgIdx, direction: "desc" };
+
     const sumIdx = result.columns.findIndex((c) => c.startsWith("sum("));
     if (sumIdx !== -1) return { key: sumIdx, direction: "desc" };
 
