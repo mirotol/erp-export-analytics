@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { LayoutList, Info, BarChart3, Filter, AlertCircle } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { LayoutList, Info, BarChart3, Filter, AlertCircle, Plus, X } from "lucide-react";
 import type { UploadResult, ReportResult, ReportConfig } from "../lib/api";
 import { runReport } from "../lib/api";
 import { withSmartLoading } from "../lib/loading";
@@ -11,35 +11,102 @@ interface BuildReportProps {
   uploadResult: UploadResult;
 }
 
+function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <div className="inline-flex items-center gap-2 bg-(--surface-elevated) border border-(--border) rounded-full px-3 py-1 text-sm text-(--text-primary) shadow-sm animate-in fade-in zoom-in duration-200">
+      <span className="max-w-37.5 truncate">{label}</span>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+        className="p-0.5 rounded-full hover:bg-(--bg-hover) text-(--text-secondary) hover:text-(--error) transition-colors"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
+
+function Popover({
+  children,
+  isOpen,
+  onClose,
+  trigger,
+}: {
+  children: React.ReactNode;
+  isOpen: boolean;
+  onClose: () => void;
+  trigger: React.ReactNode;
+}) {
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen, onClose]);
+
+  return (
+    <div className="relative inline-block" ref={popoverRef}>
+      {trigger}
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 z-50 bg-(--surface-elevated) border border-(--border) rounded-xl shadow-2xl py-2 min-w-50 max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function BuildReport({ uploadResult }: BuildReportProps) {
-  const [groupBy, setGroupBy] = useState<string>("");
-  const [includeCount, setIncludeCount] = useState(true);
-  const [useSum, setUseSum] = useState(false);
-  const [sumField, setSumField] = useState<string>("");
-  const [filterField, setFilterField] = useState<string>("");
-  const [filterOp, setFilterOp] = useState<"eq" | "contains">("eq");
-  const [filterValue, setFilterValue] = useState<string>("");
+  const [groupBy, setGroupBy] = useState<string[]>([]);
+  const [metrics, setMetrics] = useState<ReportConfig["metrics"]>([]);
+  const [filters, setFilters] = useState<ReportConfig["filters"]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ReportResult | null>(null);
 
+  const [openPopover, setOpenPopover] = useState<string | null>(null);
+
+  // New filter states
+  const [newFilterField, setNewFilterField] = useState("");
+  const [newFilterOp, setNewFilterOp] = useState<"eq" | "contains">("eq");
+  const [newFilterValue, setNewFilterValue] = useState("");
+
   const numericColumns = uploadResult.columns.filter((_, colIdx) => {
-    // Check first 50 rows (previewRows) to see if values are numeric
     return uploadResult.previewRows.some((row) => {
       const val = row[colIdx];
       return val !== "" && !isNaN(Number(val));
     });
   });
 
-  // Identify columns with high uniqueness (e.g., IDs)
-  const highUniquenessColumns = uploadResult.columns.filter((_, colIdx) => {
-    if (uploadResult.previewRows.length === 0) return false;
-    const values = uploadResult.previewRows.map((row) => row[colIdx]);
-    const uniqueValues = new Set(values);
-    // If more than 90% of values are unique, consider it high uniqueness
-    return uniqueValues.size / values.length > 0.9;
-  });
+  const { groupCount, totalPreviewRows, isHighCardinality } = useMemo(() => {
+    const total = uploadResult.previewRows.length;
+    if (groupBy.length === 0 || total === 0) {
+      return { groupCount: 0, totalPreviewRows: total, isHighCardinality: false };
+    }
+
+    const indices = groupBy.map((dim) => uploadResult.columns.indexOf(dim));
+    const combinations = new Set();
+    for (const row of uploadResult.previewRows) {
+      const key = indices.map((idx) => row[idx]).join("\x1f");
+      combinations.add(key);
+    }
+    const count = combinations.size;
+    return {
+      groupCount: count,
+      totalPreviewRows: total,
+      isHighCardinality: count / total >= 0.9,
+    };
+  }, [groupBy, uploadResult.columns, uploadResult.previewRows]);
 
   const handleRun = async () => {
     setResult(null);
@@ -51,21 +118,11 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
 
     try {
       const config: ReportConfig = {
-        groupBy: groupBy ? [groupBy] : [],
-        metrics: [],
-        filters: [],
+        groupBy,
+        metrics: metrics.length > 0 ? metrics : [{ op: "count" }],
+        filters,
         limit: 1000,
       };
-
-      if (includeCount) {
-        config.metrics.push({ op: "count" });
-      }
-      if (useSum && sumField) {
-        config.metrics.push({ op: "sum", field: sumField });
-      }
-      if (filterField && filterValue) {
-        config.filters.push({ field: filterField, op: filterOp, value: filterValue });
-      }
 
       const res = await withSmartLoading(runReport(uploadResult.reportId, config));
       setResult(res);
@@ -77,10 +134,17 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
     }
   };
 
-  const handleClearFilter = () => {
-    setFilterField("");
-    setFilterOp("eq");
-    setFilterValue("");
+  const addMetric = (op: "count" | "sum" | "avg", field?: string) => {
+    setMetrics([...metrics, { op, field }]);
+    setOpenPopover(null);
+  };
+
+  const addFilter = () => {
+    if (!newFilterField || !newFilterValue) return;
+    setFilters([...filters, { field: newFilterField, op: newFilterOp, value: newFilterValue }]);
+    setNewFilterField("");
+    setNewFilterValue("");
+    setOpenPopover(null);
   };
 
   return (
@@ -90,165 +154,244 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
       </div>
 
       <Card>
-        <div className="p-6 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Group By */}
-            <div className="space-y-3">
-              <label className="text-base font-medium text-(--text-secondary) flex items-center gap-2">
-                <LayoutList className="w-5 h-5 text-(--text-secondary)" />
-                Group by
+        <div className="p-8 space-y-10">
+          <div className="grid grid-cols-1 gap-10">
+            {/* Group By Section */}
+            <div className="space-y-4">
+              <label className="text-sm font-semibold uppercase tracking-wider text-(--text-secondary) flex items-center gap-2">
+                <LayoutList className="w-4 h-4" />
+                Dimensions (Group By)
               </label>
-              <select
-                className="w-full bg-(--surface-elevated) border border-(--border) rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-(--accent) outline-none transition-all"
-                value={groupBy}
-                onChange={(e) => setGroupBy(e.target.value)}
-              >
-                <option value="">None</option>
-                {uploadResult.columns.map((col) => (
-                  <option key={col} value={col}>
-                    {col}
-                  </option>
+              <div className="flex flex-wrap items-center gap-3 p-4 bg-(--bg-subtle) rounded-xl border border-(--border-subtle) min-h-16">
+                {groupBy.map((field, idx) => (
+                  <Chip
+                    key={`${field}-${idx}`}
+                    label={field}
+                    onRemove={() => setGroupBy(groupBy.filter((_, i) => i !== idx))}
+                  />
                 ))}
-              </select>
-              {groupBy && highUniquenessColumns.includes(groupBy) && (
-                <p className="text-s text-(--warning-muted) ml-1 flex items-center gap-2">
-                  <Info className="w-7 h-7" />
-                  This column appears to contain mostly unique values.
-                </p>
+                <Popover
+                  isOpen={openPopover === "group"}
+                  onClose={() => setOpenPopover(null)}
+                  trigger={
+                    <button
+                      onClick={() => setOpenPopover("group")}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-(--surface-elevated) hover:bg-(--bg-hover) text-(--accent) transition-all border border-(--border)"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Dimension
+                    </button>
+                  }
+                >
+                  <div className="w-64">
+                    <div className="px-4 py-2 text-xs font-bold text-(--muted) uppercase tracking-widest border-b border-(--border-subtle)">
+                      Select Field
+                    </div>
+                    {uploadResult.columns
+                      .filter((col) => !groupBy.includes(col))
+                      .map((col) => (
+                        <button
+                          key={col}
+                          className="w-full text-left px-4 py-2.5 text-base hover:bg-(--bg-hover) text-(--text-primary) transition-colors flex items-center justify-between group"
+                          onClick={() => {
+                            setGroupBy([...groupBy, col]);
+                            setOpenPopover(null);
+                          }}
+                        >
+                          {col}
+                        </button>
+                      ))}
+                  </div>
+                </Popover>
+              </div>
+              {isHighCardinality && (
+                <div className="flex items-start gap-3 p-3 bg-(--bg-subtle) border border-(--border-subtle) rounded-xl text-sm text-(--warning-muted) animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+                  <p className="leading-relaxed">
+                    Grouping by <span className="font-semibold">{groupBy.join(" + ")}</span> will
+                    produce <span className="font-semibold">{groupCount}</span> groups out of{" "}
+                    <span className="font-semibold">{totalPreviewRows}</span> rows. Aggregation may
+                    not be meaningful.
+                  </p>
+                </div>
               )}
             </div>
 
-            {/* Metrics */}
-            <div className="space-y-3">
-              <label className="text-base font-medium text-(--text-secondary) flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-(--text-secondary)" />
-                Metrics
+            {/* Metrics Section */}
+            <div className="space-y-4">
+              <label className="text-sm font-semibold uppercase tracking-wider text-(--text-secondary) flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Measures (Metrics)
               </label>
-              <div className="space-y-4">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="relative">
-                    <input
-                      type="checkbox"
-                      checked={includeCount}
-                      onChange={(e) => setIncludeCount(e.target.checked)}
-                      className="peer sr-only"
-                    />
-                    <div className="w-10 h-5 bg-(--border) rounded-full peer peer-checked:bg-(--accent) transition-colors"></div>
-                    <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                  </div>
-                  <span className="text-base text-(--text-secondary) group-hover:text-(--text-primary) transition-colors">
-                    Count rows
-                  </span>
-                </label>
-
-                <div className="space-y-2">
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        checked={useSum}
-                        onChange={(e) => setUseSum(e.target.checked)}
-                        className="peer sr-only"
-                      />
-                      <div className="w-10 h-5 bg-(--border) rounded-full peer peer-checked:bg-(--accent) transition-colors"></div>
-                      <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                    </div>
-                    <span className="text-base text-(--text-secondary) group-hover:text-(--text-primary) transition-colors">
-                      Sum field
-                    </span>
-                  </label>
-
-                  {useSum && (
-                    <div className="space-y-1">
-                      <select
-                        className="w-full bg-(--surface-elevated) border border-(--border) rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-(--accent) outline-none disabled:opacity-50"
-                        value={sumField}
-                        onChange={(e) => setSumField(e.target.value)}
-                        disabled={numericColumns.length === 0}
+              <div className="flex flex-wrap items-center gap-3 p-4 bg-(--bg-subtle) rounded-xl border border-(--border-subtle) min-h-16">
+                {metrics.length === 0 && (
+                  <Chip label="Row Count" onRemove={() => {}} /> // Visual only, default
+                )}
+                {metrics.map((m, idx) => (
+                  <Chip
+                    key={idx}
+                    label={m.field ? `${m.op}(${m.field})` : "Count"}
+                    onRemove={() => setMetrics(metrics.filter((_, i) => i !== idx))}
+                  />
+                ))}
+                <Popover
+                  isOpen={openPopover === "metric"}
+                  onClose={() => setOpenPopover(null)}
+                  trigger={
+                    <button
+                      onClick={() => setOpenPopover("metric")}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-(--surface-elevated) hover:bg-(--bg-hover) text-(--accent) transition-all border border-(--border)"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Measure
+                    </button>
+                  }
+                >
+                  <div className="w-64 divide-y divide-(--border-subtle)">
+                    {!metrics.some((m) => m.op === "count") && (
+                      <button
+                        className="w-full text-left px-4 py-2.5 text-base hover:bg-(--bg-hover) text-(--text-primary)"
+                        onClick={() => addMetric("count")}
                       >
-                        <option value="">
-                          {numericColumns.length === 0
-                            ? "No numeric fields found"
-                            : "Select numeric field"}
-                        </option>
-                        {numericColumns.map((col) => (
+                        Row Count
+                      </button>
+                    )}
+                    <div className="px-4 py-2.5 text-xs font-bold text-(--muted) uppercase tracking-widest bg-(--surface)">
+                      Sum
+                    </div>
+                    {numericColumns
+                      .filter((col) => !metrics.some((m) => m.op === "sum" && m.field === col))
+                      .map((col) => (
+                        <button
+                          key={`sum-${col}`}
+                          className="w-full text-left px-4 py-2.5 text-base hover:bg-(--bg-hover) text-(--text-primary)"
+                          onClick={() => addMetric("sum", col)}
+                        >
+                          Sum of {col}
+                        </button>
+                      ))}
+                    <div className="px-4 py-2.5 text-xs font-bold text-(--muted) uppercase tracking-widest bg-(--surface)">
+                      Average
+                    </div>
+                    {numericColumns
+                      .filter((col) => !metrics.some((m) => m.op === "avg" && m.field === col))
+                      .map((col) => (
+                        <button
+                          key={`avg-${col}`}
+                          className="w-full text-left px-4 py-2.5 text-base hover:bg-(--bg-hover) text-(--text-primary)"
+                          onClick={() => addMetric("avg", col)}
+                        >
+                          Average of {col}
+                        </button>
+                      ))}
+                  </div>
+                </Popover>
+              </div>
+            </div>
+
+            {/* Filters Section */}
+            <div className="space-y-4">
+              <label className="text-sm font-semibold uppercase tracking-wider text-(--text-secondary) flex items-center gap-2">
+                <Filter className="w-4 h-4" />
+                Filters
+              </label>
+              <div className="flex flex-wrap items-center gap-3 p-4 bg-(--bg-subtle) rounded-xl border border-(--border-subtle) min-h-16">
+                {filters.map((f, idx) => (
+                  <Chip
+                    key={idx}
+                    label={`${f.field} ${f.op === "eq" ? "=" : "≈"} ${f.value}`}
+                    onRemove={() => setFilters(filters.filter((_, i) => i !== idx))}
+                  />
+                ))}
+                <Popover
+                  isOpen={openPopover === "filter"}
+                  onClose={() => setOpenPopover(null)}
+                  trigger={
+                    <button
+                      onClick={() => setOpenPopover("filter")}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-(--surface-elevated) hover:bg-(--bg-hover) text-(--accent) transition-all border border-(--border)"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Filter
+                    </button>
+                  }
+                >
+                  <div className="p-4 w-72 space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-(--muted) uppercase tracking-widest">
+                        Column
+                      </label>
+                      <select
+                        className="w-full bg-(--background) border border-(--border) rounded-lg px-3 py-2 text-base outline-none focus:ring-2 focus:ring-(--accent)"
+                        value={newFilterField}
+                        onChange={(e) => setNewFilterField(e.target.value)}
+                      >
+                        <option value="">Select Field</option>
+                        {uploadResult.columns.map((col) => (
                           <option key={col} value={col}>
                             {col}
                           </option>
                         ))}
                       </select>
-                      {numericColumns.length === 0 && (
-                        <p className="text-xs text-muted-foreground ml-1">
-                          Only numeric columns can be summed.
-                        </p>
-                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Filter */}
-            <div className="space-y-3 lg:col-span-1">
-              <div className="flex items-center justify-between">
-                <label className="text-base font-medium text-(--text-secondary) flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-(--text-secondary)" />
-                  Filter
-                </label>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleClearFilter}
-                  className="h-7 px-2 text-xs opacity-80 hover:opacity-100"
-                >
-                  Clear filter
-                </Button>
-              </div>
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <select
-                    className="flex-1 bg-(--surface-elevated) border border-(--border) rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-(--accent) outline-none"
-                    value={filterField}
-                    onChange={(e) => setFilterField(e.target.value)}
-                  >
-                    <option value="">Select Column</option>
-                    {uploadResult.columns.map((col) => (
-                      <option key={col} value={col}>
-                        {col}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="w-28 bg-(--surface-elevated) border border-(--border) rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-(--accent) outline-none"
-                    value={filterOp}
-                    onChange={(e) => setFilterOp(e.target.value as "eq" | "contains")}
-                  >
-                    <option value="eq">equals</option>
-                    <option value="contains">contains</option>
-                  </select>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Filter value..."
-                  className="w-full bg-(--surface-elevated) border border-(--border) rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-(--accent) outline-none"
-                  value={filterValue}
-                  onChange={(e) => setFilterValue(e.target.value)}
-                />
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-(--muted) uppercase tracking-widest">
+                        Condition
+                      </label>
+                      <select
+                        className="w-full bg-(--background) border border-(--border) rounded-lg px-3 py-2 text-base outline-none focus:ring-2 focus:ring-(--accent)"
+                        value={newFilterOp}
+                        onChange={(e) => setNewFilterOp(e.target.value as "eq" | "contains")}
+                      >
+                        <option value="eq">Equals</option>
+                        <option value="contains">Contains</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-(--muted) uppercase tracking-widest">
+                        Value
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full bg-(--background) border border-(--border) rounded-lg px-3 py-2 text-base outline-none focus:ring-2 focus:ring-(--accent)"
+                        placeholder="Type value..."
+                        value={newFilterValue}
+                        onChange={(e) => setNewFilterValue(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && addFilter()}
+                      />
+                    </div>
+                    <Button onClick={addFilter} className="w-full" size="sm">
+                      Apply Filter
+                    </Button>
+                  </div>
+                </Popover>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 pt-4 border-t border-(--border-subtle)">
-            <Button
-              onClick={handleRun}
-              isLoading={isLoading}
-              className="w-full md:w-48 py-2.5 h-11"
-            >
-              Run Report
-            </Button>
+          <div className="flex flex-col gap-6 pt-8 border-t border-(--border-subtle)">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <Button
+                onClick={handleRun}
+                isLoading={isLoading}
+                className="w-full md:w-56 py-3 h-12 shadow-xl"
+              >
+                Generate Report
+              </Button>
+              <div className="text-sm text-(--text-secondary) bg-(--bg-hover) px-4 py-2 rounded-lg border border-(--border-subtle)">
+                {groupBy.length > 0 ? (
+                  <span className="flex items-center gap-2">
+                    <Info className="w-4 h-4 text-(--accent)" />
+                    Grouping by {groupBy.join(" → ")}
+                  </span>
+                ) : (
+                  "Grand total summary"
+                )}
+              </div>
+            </div>
 
             {error && (
-              <div className="p-4 bg-(--error-bg) border border-(--error-border) text-(--error) text-base rounded-lg flex items-center gap-3">
+              <div className="p-4 bg-(--error-bg) border border-(--error-border) text-(--error) text-base rounded-xl flex items-center gap-3 animate-in shake duration-300">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 {error}
               </div>
@@ -258,7 +401,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
       </Card>
 
       {result && (
-        <section>
+        <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <ReportResults result={result} />
         </section>
       )}

@@ -174,21 +174,41 @@ func TestRunReport(t *testing.T) {
 		}
 	})
 
-	t.Run("inconsistent row lengths don't crash", func(t *testing.T) {
-		// This is covered by the overall test since the CSV has an extra field in the last row
-		// and we check results above. Specifically checking rowsScanned.
+	t.Run("multiple groupBy + avg", func(t *testing.T) {
 		req := ReportRequest{
+			GroupBy: []string{"category", "name"},
 			Metrics: []struct {
 				Op    string `json:"op"`
 				Field string `json:"field,omitempty"`
-			}{{Op: "count"}},
+			}{
+				{Op: "avg", Field: "amount"},
+				{Op: "count"},
+			},
 		}
 		resp, err := RunReport(csvPath, req)
 		if err != nil {
 			t.Fatalf("RunReport failed: %v", err)
 		}
-		if resp.RowsScanned != 7 {
-			t.Errorf("expected 7 rows scanned, got %d", resp.RowsScanned)
+		// Expected: 7 rows since category+name is unique in this dataset
+		if len(resp.Rows) != 7 {
+			t.Errorf("expected 7 rows, got %d", len(resp.Rows))
+		}
+		// Check first row: 1,Item A,Electronics,100.50
+		// Column order: category, name, avg(amount), count
+		found := false
+		for _, row := range resp.Rows {
+			if row[0] == "Electronics" && row[1] == "Item A" {
+				found = true
+				if row[2] != "100.50" {
+					t.Errorf("expected avg 100.50, got %s", row[2])
+				}
+				if row[3] != "1" {
+					t.Errorf("expected count 1, got %s", row[3])
+				}
+			}
+		}
+		if !found {
+			t.Error("Electronics Item A not found in results")
 		}
 	})
 }

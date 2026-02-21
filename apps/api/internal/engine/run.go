@@ -34,13 +34,13 @@ func RunReport(filePath string, req ReportRequest) (ReportResponse, error) {
 	}
 
 	// Simple validation and setup
-	groupByIdx := -1
-	if len(req.GroupBy) > 0 {
-		idx, ok := headerMap[req.GroupBy[0]]
+	var groupByIndices []int
+	for _, gb := range req.GroupBy {
+		idx, ok := headerMap[gb]
 		if !ok {
-			return ReportResponse{}, fmt.Errorf("invalid groupBy column: %s", req.GroupBy[0])
+			return ReportResponse{}, fmt.Errorf("invalid groupBy column: %s", gb)
 		}
-		groupByIdx = idx
+		groupByIndices = append(groupByIndices, idx)
 	}
 
 	// Metrics setup
@@ -78,7 +78,11 @@ func RunReport(filePath string, req ReportRequest) (ReportResponse, error) {
 	}
 
 	// Aggregation
-	results := make(map[string][]float64)
+	type aggState struct {
+		sum   float64
+		count int64
+	}
+	results := make(map[string][]aggState)
 	groupOrder := []string{}
 	rowsScanned := 0
 
@@ -118,13 +122,18 @@ func RunReport(filePath string, req ReportRequest) (ReportResponse, error) {
 		}
 
 		// Determine group
-		groupKey := ""
-		if groupByIdx != -1 && groupByIdx < len(row) {
-			groupKey = row[groupByIdx]
+		var groupValues []string
+		for _, idx := range groupByIndices {
+			if idx < len(row) {
+				groupValues = append(groupValues, row[idx])
+			} else {
+				groupValues = append(groupValues, "")
+			}
 		}
+		groupKey := strings.Join(groupValues, "\x1f")
 
 		if _, ok := results[groupKey]; !ok {
-			results[groupKey] = make([]float64, len(metrics))
+			results[groupKey] = make([]aggState, len(metrics))
 			groupOrder = append(groupOrder, groupKey)
 		}
 
@@ -132,12 +141,13 @@ func RunReport(filePath string, req ReportRequest) (ReportResponse, error) {
 		for i, m := range metrics {
 			switch m.op {
 			case "count":
-				results[groupKey][i]++
-			case "sum":
+				results[groupKey][i].count++
+			case "sum", "avg":
 				if m.idx < len(row) {
 					valStr := row[m.idx]
 					if val, ok := csvutil.InferNumeric(valStr); ok {
-						results[groupKey][i] += val
+						results[groupKey][i].sum += val
+						results[groupKey][i].count++
 					}
 				}
 			}
@@ -146,9 +156,7 @@ func RunReport(filePath string, req ReportRequest) (ReportResponse, error) {
 
 	// Prepare response
 	respColumns := []string{}
-	if groupByIdx != -1 {
-		respColumns = append(respColumns, req.GroupBy[0])
-	}
+	respColumns = append(respColumns, req.GroupBy...)
 	for _, m := range req.Metrics {
 		colName := m.Op
 		if m.Field != "" {
@@ -159,19 +167,27 @@ func RunReport(filePath string, req ReportRequest) (ReportResponse, error) {
 
 	respRows := [][]string{}
 	for _, gk := range groupOrder {
-		rowValues := results[gk]
+		states := results[gk]
 		row := []string{}
-		if groupByIdx != -1 {
-			row = append(row, gk)
+		if len(groupByIndices) > 0 {
+			groupValues := strings.Split(gk, "\x1f")
+			row = append(row, groupValues...)
 		}
-		for i, v := range rowValues {
+
+		for i, st := range states {
 			switch req.Metrics[i].Op {
 			case "count":
-				row = append(row, fmt.Sprintf("%d", int64(v)))
+				row = append(row, fmt.Sprintf("%d", st.count))
 			case "sum":
-				row = append(row, fmt.Sprintf("%.2f", v))
+				row = append(row, fmt.Sprintf("%.2f", st.sum))
+			case "avg":
+				if st.count > 0 {
+					row = append(row, fmt.Sprintf("%.2f", st.sum/float64(st.count)))
+				} else {
+					row = append(row, "0.00")
+				}
 			default:
-				row = append(row, fmt.Sprintf("%.2f", v))
+				row = append(row, fmt.Sprintf("%.2f", st.sum))
 			}
 		}
 

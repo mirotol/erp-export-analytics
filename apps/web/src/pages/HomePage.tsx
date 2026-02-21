@@ -58,14 +58,14 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--background)] p-6 md:p-12">
+    <div className="min-h-screen bg-(--background) p-6 md:p-12">
       <div className="max-w-6xl mx-auto space-y-10">
         <header className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div>
-            <h1 className="text-5xl font-bold tracking-tight text-[var(--text-primary)]">
+            <h1 className="text-5xl font-bold tracking-tight text-(--text-primary) -ml-0.75">
               ERP Export Analytics
             </h1>
-            <p className="text-[var(--text-secondary)] mt-3 text-xl">
+            <p className="text-(--text-secondary) mt-3 text-xl">
               Streamlined CSV processing and preview tool.
             </p>
           </div>

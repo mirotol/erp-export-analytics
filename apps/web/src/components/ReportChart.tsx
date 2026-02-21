@@ -21,15 +21,21 @@ export function ReportChart({
   // 1. Identify numeric columns (metrics)
   const numericColumnIndices = useMemo(() => {
     return result.columns
-      .map((_, idx) => {
-        // First column is usually the group by column (string)
-        if (idx === 0) return -1;
-        // Check if values in this column are numeric
-        const isNumeric = result.rows.some((row) => !isNaN(parseFloat(row[idx])));
-        return isNumeric ? idx : -1;
+      .map((col, idx) => {
+        const isMetric = col === "count" || col.startsWith("sum(") || col.startsWith("avg(");
+        return isMetric ? idx : -1;
       })
       .filter((idx) => idx !== -1);
-  }, [result.columns, result.rows]);
+  }, [result.columns]);
+
+  const dimensionIndices = useMemo(() => {
+    return result.columns
+      .map((col, idx) => {
+        const isMetric = col === "count" || col.startsWith("sum(") || col.startsWith("avg(");
+        return isMetric ? -1 : idx;
+      })
+      .filter((idx) => idx !== -1);
+  }, [result.columns]);
 
   // 3. Prepare data
   const chartData = useMemo(() => {
@@ -46,7 +52,7 @@ export function ReportChart({
     const others = sorted.slice(12);
 
     const data = top12.map((row) => ({
-      name: row[0] || "(empty)",
+      name: dimensionIndices.map((idx) => row[idx]).join(" / ") || "Total",
       value: parseFloat(row[selectedMetricIdx]) || 0,
     }));
 
@@ -62,7 +68,7 @@ export function ReportChart({
     }
 
     return data;
-  }, [result.rows, selectedMetricIdx]);
+  }, [result.rows, selectedMetricIdx, dimensionIndices]);
 
   // 4. Determine if we should use horizontal layout
   const isHorizontal = useMemo(() => {
@@ -154,14 +160,14 @@ export function ReportChart({
               <XAxis
                 dataKey="name"
                 stroke="var(--muted)"
-                fontSize={14}
+                fontSize={16}
                 tickLine={false}
                 axisLine={false}
                 dy={10}
               />
               <YAxis
                 stroke="var(--muted)"
-                fontSize={14}
+                fontSize={16}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) =>

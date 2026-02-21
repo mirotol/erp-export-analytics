@@ -32,7 +32,7 @@ export async function fetchSamplePreview(sampleId: string): Promise<UploadResult
 
 export interface ReportConfig {
   groupBy: string[];
-  metrics: { op: "count" | "sum"; field?: string }[];
+  metrics: { op: "count" | "sum" | "avg"; field?: string }[];
   filters: { field: string; op: "eq" | "contains"; value: string }[];
   limit: number;
 }

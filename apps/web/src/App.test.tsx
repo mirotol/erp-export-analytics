@@ -81,12 +81,12 @@ describe("App Happy Path", () => {
     expect(await screen.findByText(/Report Preview/i)).toBeInTheDocument();
     expect(await screen.findByText(/Build Report/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /Run Report/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Generate Report/i }));
 
     expect(await screen.findByText(/Report Results/i)).toBeInTheDocument();
 
     // Table content from mocked report result
-    expect(await screen.findAllByText("sum(total)")).toHaveLength(2); // One in dropdown, one in table header
+    expect(await screen.findAllByText("sum(total)")).toHaveLength(2); // One in table header, one in metric selector
     expect(screen.getByText("100.00")).toBeInTheDocument();
 
     // Switch to chart
