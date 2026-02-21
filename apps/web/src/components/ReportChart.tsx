@@ -122,7 +122,7 @@ export function ReportChart({
           </defs>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="var(--white-08)"
+            stroke="var(--bg-active)"
             vertical={isHorizontal}
             horizontal={!isHorizontal}
           />

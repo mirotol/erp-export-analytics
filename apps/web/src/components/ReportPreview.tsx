@@ -34,7 +34,7 @@ export function ReportPreview({ result }: ReportPreviewProps) {
           </p>
         </div>
         <Table columns={result.columns} rows={result.previewRows} />
-        <div className="p-4 bg-(--white-02) border-t border-(--border)">
+        <div className="p-4 bg-(--bg-subtle) border-t border-(--border)">
           <p className="text-sm text-(--muted) italic">
             Showing first {result.previewRows.length} rows for preview purposes.
           </p>

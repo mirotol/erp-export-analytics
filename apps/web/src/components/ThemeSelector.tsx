@@ -35,7 +35,7 @@ export function ThemeSelector() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-lg bg-(--surface-elevated) border border-(--border) text-(--text-primary) hover:bg-(--white-08) transition-colors focus:ring-2 focus:ring-(--accent) outline-none"
+        className="p-2 rounded-lg bg-(--surface-elevated) border border-(--border) text-(--text-primary) hover:bg-(--bg-active) transition-colors focus:ring-2 focus:ring-(--accent) outline-none"
         aria-label="Choose theme"
         aria-haspopup="true"
         aria-expanded={isOpen}
@@ -55,7 +55,7 @@ export function ThemeSelector() {
                 setTheme(t.id);
                 setIsOpen(false);
               }}
-              className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors hover:bg-(--white-08) ${
+              className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors hover:bg-(--bg-active) ${
                 theme === t.id ? "text-(--accent) font-medium" : "text-(--text-primary)"
               }`}
             >

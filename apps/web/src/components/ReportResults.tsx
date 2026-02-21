@@ -189,7 +189,7 @@ export function ReportResults({ result }: ReportResultsProps) {
                   {result.columns.map((col, i) => (
                     <th
                       key={i}
-                      className="px-4 py-3 text-base font-semibold cursor-pointer hover:bg-(--white-08) transition-colors group whitespace-nowrap text-(--text-primary)"
+                      className="px-4 py-3 text-base font-semibold cursor-pointer hover:bg-(--bg-active) transition-colors group whitespace-nowrap text-(--text-primary)"
                       onClick={() => handleSort(i)}
                     >
                       <div className="flex items-center gap-1.5">

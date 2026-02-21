@@ -27,12 +27,12 @@ export function Button({
   const variants = {
     primary:
       "text-white transition-all duration-150 ease-out " +
-      "opacity-90 hover:opacity-100 " +
+      "opacity-90 hover:opacity-100 shadow-lg " +
       "active:opacity-90 active:translate-y-[1px] " +
       "disabled:opacity-40 disabled:cursor-not-allowed " +
       "hover:shadow-[var(--accent-glow)]",
     secondary:
-      "bg-transparent text-[var(--text-primary)] border border-[var(--white-12)] hover:bg-[var(--white-05)]",
+      "bg-transparent text-[var(--text-primary)] border border-[var(--border-bold)] hover:bg-[var(--bg-hover)] shadow-md",
   };
 
   return (
