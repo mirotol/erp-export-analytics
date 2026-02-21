@@ -15,7 +15,7 @@ type SortConfig = {
 function SortIcon({ active, direction }: { active: boolean; direction?: "asc" | "desc" }) {
   return (
     <div
-      className={`w-5 h-5 flex items-center justify-center flex-shrink-0 text-[var(--text-primary)] transition-opacity ${
+      className={`w-5 h-5 flex items-center justify-center shrink-0 text-(--text-primary) transition-opacity ${
         active ? "opacity-100" : "opacity-0"
       }`}
     >
@@ -104,11 +104,11 @@ export function ReportResults({ result }: ReportResultsProps) {
   if (result.rows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <div className="w-16 h-16 bg-[var(--surface-elevated)] rounded-full flex items-center justify-center mb-4">
-          <SearchX className="w-8 h-8 text-[var(--muted)]" />
+        <div className="w-16 h-16 bg-(--surface-elevated) rounded-full flex items-center justify-center mb-4">
+          <SearchX className="w-8 h-8 text-(--muted)" />
         </div>
-        <h3 className="text-lg font-medium text-[var(--text-primary)]">No results found</h3>
-        <p className="text-[var(--text-secondary)] mt-1">No results match your filters.</p>
+        <h3 className="text-lg font-medium text-(--text-primary)">No results found</h3>
+        <p className="text-(--text-secondary) mt-1">No results match your filters.</p>
       </div>
     );
   }
@@ -117,8 +117,8 @@ export function ReportResults({ result }: ReportResultsProps) {
     <div className="space-y-4">
       {/* Row 1: Context */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold text-[var(--text-primary)]">Report Results</h3>
-        <div className="text-base text-[var(--text-secondary)] flex gap-4">
+        <h3 className="text-xl font-semibold text-(--text-primary)">Report Results</h3>
+        <div className="text-base text-(--text-secondary) flex gap-4">
           <span>
             {result.rows.length} groups • {result.rowsScanned.toLocaleString()} rows scanned
           </span>
@@ -128,9 +128,9 @@ export function ReportResults({ result }: ReportResultsProps) {
       {/* Row 2: Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <label className="text-base font-medium text-[var(--text-secondary)]">Metric</label>
+          <label className="text-base font-medium text-(--text-secondary)">Metric</label>
           <select
-            className="bg-[var(--surface-elevated)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-base focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all"
+            className="bg-(--surface-elevated) border border-(--border) rounded-lg px-3 py-1.5 text-base focus:ring-2 focus:ring-(--accent) outline-none transition-all"
             value={selectedMetricIdx}
             onChange={(e) => setSelectedMetricIdx(parseInt(e.target.value))}
           >
@@ -142,21 +142,19 @@ export function ReportResults({ result }: ReportResultsProps) {
           </select>
         </div>
 
-        <div className="inline-flex items-center bg-[var(--surface)] border border-[var(--border)] rounded-lg p-1 shadow-[var(--shadow-subtle)]">
+        <div className="inline-flex items-center bg-(--surface) border border-(--border) rounded-lg p-1 shadow-(--shadow-subtle)">
           <button
             type="button"
             onClick={() => setView("table")}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
               view === "table"
-                ? "bg-[var(--surface-elevated)] text-[var(--text-primary)] ring-1 ring-[var(--border)]"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                ? "bg-(--surface-elevated) text-(--text-primary) ring-1 ring-(--border)"
+                : "text-(--text-secondary) hover:text-(--text-primary)"
             }`}
             aria-pressed={view === "table"}
           >
             <TableIcon
-              className={`w-5 h-5 ${
-                view === "table" ? "text-[var(--accent)]" : "text-[var(--muted)]"
-              }`}
+              className={`w-5 h-5 ${view === "table" ? "text-(--accent)" : "text-(--muted)"}`}
               strokeWidth={1.75}
             />
             Table
@@ -167,15 +165,13 @@ export function ReportResults({ result }: ReportResultsProps) {
             onClick={() => setView("chart")}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
               view === "chart"
-                ? "bg-[var(--surface-elevated)] text-[var(--text-primary)] ring-1 ring-[var(--border)]"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                ? "bg-(--surface-elevated) text-(--text-primary) ring-1 ring-(--border)"
+                : "text-(--text-secondary) hover:text-(--text-primary)"
             }`}
             aria-pressed={view === "chart"}
           >
             <BarChart3
-              className={`w-5 h-5 ${
-                view === "chart" ? "text-[var(--accent)]" : "text-[var(--muted)]"
-              }`}
+              className={`w-5 h-5 ${view === "chart" ? "text-(--accent)" : "text-(--muted)"}`}
               strokeWidth={2.25}
             />
             Chart
@@ -185,15 +181,15 @@ export function ReportResults({ result }: ReportResultsProps) {
 
       {/* Row 3: Visualization */}
       {view === "table" ? (
-        <div className="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--surface)]">
+        <div className="border border-(--border) rounded-xl overflow-hidden bg-(--surface)">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-[var(--surface-elevated)] z-10 border-b border-[var(--border)]">
+              <thead className="sticky top-0 bg-(--surface-elevated) z-10 border-b border-(--border)">
                 <tr>
                   {result.columns.map((col, i) => (
                     <th
                       key={i}
-                      className="px-4 py-3 text-base font-semibold cursor-pointer hover:bg-[var(--white-08)] transition-colors group whitespace-nowrap text-[var(--text-primary)]"
+                      className="px-4 py-3 text-base font-semibold cursor-pointer hover:bg-(--white-08) transition-colors group whitespace-nowrap text-(--text-primary)"
                       onClick={() => handleSort(i)}
                     >
                       <div className="flex items-center gap-1.5">
@@ -207,13 +203,13 @@ export function ReportResults({ result }: ReportResultsProps) {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--border-subtle)]">
+              <tbody className="divide-y divide-(--border-subtle)">
                 {sortedRows.map((row, i) => (
-                  <tr key={i} className="hover:bg-[var(--accent-hover-bg)] transition-colors">
+                  <tr key={i} className="hover:bg-(--accent-hover-bg) transition-colors">
                     {row.map((cell, j) => (
                       <td
                         key={j}
-                        className="px-4 py-3 text-base text-[var(--text-secondary)] whitespace-nowrap"
+                        className="px-4 py-3 text-base text-(--text-secondary) whitespace-nowrap"
                       >
                         {cell}
                       </td>

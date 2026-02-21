@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  /* Gengar-inspired Dark Theme */
   --background: #0b0b12;
   --surface: #141420;
   --surface-elevated: #1a1a2b;
@@ -55,7 +56,6 @@
 
 [data-theme="light"] {
   /* Snorlax-inspired Light Theme */
-  /* Colors provided: 6096AA 29738F F1E5D8 CEC2B8 7F6F62 */
   --background: #f1e5d8;
   --surface: #cec2b8;
   --surface-elevated: #dcd1c7;
@@ -88,35 +88,23 @@
   --white-12: rgba(255, 255, 255, 0.8);
 
   --selection: rgba(96, 150, 170, 0.3);
-  --shadow-subtle: 0 4px 20px rgba(127, 111, 98, 0.2);
+  --shadow-subtle: 0 4px 20px rgba(127, 111, 98, 0.4);
 
   color-scheme: light;
-}
-
-@theme {
-  --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
-  --color-accent-active: var(--accent-active);
-  --color-surface: var(--surface);
-  --color-surface-elevated: var(--surface-elevated);
-  --color-border: var(--border);
-  --color-muted: var(--muted);
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
 }
 
 /* Base styles */
 @layer base {
   body {
-    @apply m-0 min-h-screen bg-[var(--background)] text-[var(--text-primary)];
+    @apply m-0 min-h-screen bg-(--background) text-(--text-primary);
   }
 
   a {
-    @apply font-medium text-[var(--accent)] no-underline transition-colors hover:text-[var(--accent-hover)];
+    @apply font-medium text-(--accent) no-underline transition-colors hover:text-(--accent-hover);
   }
 
   ::selection {
-    @apply bg-[var(--selection)];
+    @apply bg-(--selection);
   }
 
   h1,
@@ -125,6 +113,6 @@
   h4,
   h5,
   h6 {
-    @apply font-semibold tracking-tight text-[var(--text-primary)];
+    @apply font-semibold tracking-tight text-(--text-primary);
   }
 }

@@ -35,7 +35,7 @@ export function ThemeSelector() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--white-08)] transition-colors focus:ring-2 focus:ring-[var(--accent)] outline-none"
+        className="p-2 rounded-lg bg-(--surface-elevated) border border-(--border) text-(--text-primary) hover:bg-(--white-08) transition-colors focus:ring-2 focus:ring-(--accent) outline-none"
         aria-label="Choose theme"
         aria-haspopup="true"
         aria-expanded={isOpen}
@@ -44,8 +44,8 @@ export function ThemeSelector() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[var(--surface-elevated)] border border-[var(--border)] shadow-[var(--shadow-subtle)] py-2 z-50">
-          <div className="px-4 py-2 text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">
+        <div className="absolute right-0 mt-2 w-48 rounded-xl bg-(--surface-elevated) border border-(--border) shadow-(--shadow-subtle) py-2 z-50">
+          <div className="px-4 py-2 text-xs font-semibold text-(--muted) uppercase tracking-wider">
             Choose theme
           </div>
           {themes.map((t) => (
@@ -55,8 +55,8 @@ export function ThemeSelector() {
                 setTheme(t.id);
                 setIsOpen(false);
               }}
-              className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors hover:bg-[var(--white-08)] ${
-                theme === t.id ? "text-[var(--accent)] font-medium" : "text-[var(--text-primary)]"
+              className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors hover:bg-(--white-08) ${
+                theme === t.id ? "text-(--accent) font-medium" : "text-(--text-primary)"
               }`}
             >
               {t.label}

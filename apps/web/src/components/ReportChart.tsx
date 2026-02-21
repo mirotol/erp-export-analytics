@@ -86,9 +86,9 @@ export function ReportChart({
 
   if (!canShowChart) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-[var(--surface)] border border-[var(--border)] rounded-xl">
-        <h3 className="text-lg font-medium text-[var(--text-primary)]">Cannot render chart</h3>
-        <p className="text-[var(--text-secondary)] mt-2 max-w-md">
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-(--surface) border border-(--border) rounded-xl">
+        <h3 className="text-lg font-medium text-(--text-primary)">Cannot render chart</h3>
+        <p className="text-(--text-secondary) mt-2 max-w-md">
           Charts require at least one "Group by" column and one numeric metric (Count or Sum).
         </p>
       </div>
@@ -96,7 +96,7 @@ export function ReportChart({
   }
 
   return (
-    <div className="h-[400px] w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl p-6">
+    <div className="h-100 w-full bg-(--surface) border border-(--border) rounded-xl p-6">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={chartData}
@@ -186,7 +186,7 @@ export function ReportChart({
               <Cell
                 key={`cell-${index}`}
                 fill="url(#barGradient)"
-                className="hover:fill-[var(--accent-hover)] transition-colors duration-200"
+                className="hover:fill-(--accent-hover) transition-colors duration-200"
               />
             ))}
           </Bar>

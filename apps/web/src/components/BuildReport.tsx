@@ -86,7 +86,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-[var(--text-primary)]">Build Report</h2>
+        <h2 className="text-xl font-semibold text-(--text-primary)">Build Report</h2>
       </div>
 
       <Card>
@@ -94,12 +94,12 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Group By */}
             <div className="space-y-3">
-              <label className="text-base font-medium text-[var(--text-secondary)] flex items-center gap-2">
-                <LayoutList className="w-5 h-5 text-[var(--text-secondar)]" />
+              <label className="text-base font-medium text-(--text-secondary) flex items-center gap-2">
+                <LayoutList className="w-5 h-5 text-(--text-secondary)" />
                 Group by
               </label>
               <select
-                className="w-full bg-[var(--surface-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all"
+                className="w-full bg-(--surface-elevated) border border-(--border) rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-(--accent) outline-none transition-all"
                 value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value)}
               >
@@ -111,7 +111,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
                 ))}
               </select>
               {groupBy && highUniquenessColumns.includes(groupBy) && (
-                <p className="text-s text-[var(--warning-muted)] ml-1 flex items-center gap-2">
+                <p className="text-s text-(--warning-muted) ml-1 flex items-center gap-2">
                   <Info className="w-7 h-7" />
                   This column appears to contain mostly unique values.
                 </p>
@@ -120,8 +120,8 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
 
             {/* Metrics */}
             <div className="space-y-3">
-              <label className="text-base font-medium text-[var(--text-secondary)] flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-[var(--text-secondary)]" />
+              <label className="text-base font-medium text-(--text-secondary) flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-(--text-secondary)" />
                 Metrics
               </label>
               <div className="space-y-4">
@@ -133,10 +133,10 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
                       onChange={(e) => setIncludeCount(e.target.checked)}
                       className="peer sr-only"
                     />
-                    <div className="w-10 h-5 bg-[var(--border)] rounded-full peer peer-checked:bg-[var(--accent)] transition-colors"></div>
+                    <div className="w-10 h-5 bg-(--border) rounded-full peer peer-checked:bg-(--accent) transition-colors"></div>
                     <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
                   </div>
-                  <span className="text-base text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
+                  <span className="text-base text-(--text-secondary) group-hover:text-(--text-primary) transition-colors">
                     Count rows
                   </span>
                 </label>
@@ -150,10 +150,10 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
                         onChange={(e) => setUseSum(e.target.checked)}
                         className="peer sr-only"
                       />
-                      <div className="w-10 h-5 bg-[var(--border)] rounded-full peer peer-checked:bg-[var(--accent)] transition-colors"></div>
+                      <div className="w-10 h-5 bg-(--border) rounded-full peer peer-checked:bg-(--accent) transition-colors"></div>
                       <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
                     </div>
-                    <span className="text-base text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
+                    <span className="text-base text-(--text-secondary) group-hover:text-(--text-primary) transition-colors">
                       Sum field
                     </span>
                   </label>
@@ -161,7 +161,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
                   {useSum && (
                     <div className="space-y-1">
                       <select
-                        className="w-full bg-[var(--surface-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-[var(--accent)] outline-none disabled:opacity-50"
+                        className="w-full bg-(--surface-elevated) border border-(--border) rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-(--accent) outline-none disabled:opacity-50"
                         value={sumField}
                         onChange={(e) => setSumField(e.target.value)}
                         disabled={numericColumns.length === 0}
@@ -191,8 +191,8 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
             {/* Filter */}
             <div className="space-y-3 lg:col-span-1">
               <div className="flex items-center justify-between">
-                <label className="text-base font-medium text-[var(--text-secondary)] flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-[var(--text-secondary)]" />
+                <label className="text-base font-medium text-(--text-secondary) flex items-center gap-2">
+                  <Filter className="w-5 h-5 text-(--text-secondary)" />
                   Filter
                 </label>
                 <Button
@@ -207,7 +207,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <select
-                    className="flex-1 bg-[var(--surface-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-[var(--accent)] outline-none"
+                    className="flex-1 bg-(--surface-elevated) border border-(--border) rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-(--accent) outline-none"
                     value={filterField}
                     onChange={(e) => setFilterField(e.target.value)}
                   >
@@ -219,7 +219,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
                     ))}
                   </select>
                   <select
-                    className="w-28 bg-[var(--surface-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-[var(--accent)] outline-none"
+                    className="w-28 bg-(--surface-elevated) border border-(--border) rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-(--accent) outline-none"
                     value={filterOp}
                     onChange={(e) => setFilterOp(e.target.value as "eq" | "contains")}
                   >
@@ -230,7 +230,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
                 <input
                   type="text"
                   placeholder="Filter value..."
-                  className="w-full bg-[var(--surface-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-[var(--accent)] outline-none"
+                  className="w-full bg-(--surface-elevated) border border-(--border) rounded-lg px-3 py-2 text-base focus:ring-2 focus:ring-(--accent) outline-none"
                   value={filterValue}
                   onChange={(e) => setFilterValue(e.target.value)}
                 />
@@ -238,7 +238,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 pt-4 border-t border-[var(--border-subtle)]">
+          <div className="flex flex-col gap-4 pt-4 border-t border-(--border-subtle)">
             <Button
               onClick={handleRun}
               isLoading={isLoading}
@@ -248,7 +248,7 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
             </Button>
 
             {error && (
-              <div className="p-4 bg-[var(--error-bg)] border border-[var(--error-border)] text-[var(--error)] text-base rounded-lg flex items-center gap-3">
+              <div className="p-4 bg-(--error-bg) border border-(--error-border) text-(--error) text-base rounded-lg flex items-center gap-3">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 {error}
               </div>
