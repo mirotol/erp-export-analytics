@@ -68,7 +68,7 @@ export function ReportChart({
     }
 
     return data;
-  }, [result.rows, selectedMetricIdx]);
+  }, [result.rows, selectedMetricIdx, dimensionIndices]);
 
   // 4. Determine if we should use horizontal layout
   const isHorizontal = useMemo(() => {

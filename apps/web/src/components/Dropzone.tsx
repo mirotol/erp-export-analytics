@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { UploadCloud, AlertCircle } from "lucide-react";
 
 interface DropzoneProps {
@@ -13,12 +13,6 @@ export function Dropzone({ onFileSelect, accept = ".csv", isLoading }: DropzoneP
   const [isDragActive, setIsDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isLoading) {
-      setError(null);
-    }
-  }, [isLoading]);
 
   const validateFile = (file: File): boolean => {
     setError(null);
