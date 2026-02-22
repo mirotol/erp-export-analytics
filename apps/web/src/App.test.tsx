@@ -68,6 +68,7 @@ describe("App Happy Path", () => {
     });
 
     vi.stubGlobal("fetch", fetchMock);
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
   });
 
   it("renders page, loads samples, and can run a report", async () => {
@@ -84,6 +85,11 @@ describe("App Happy Path", () => {
     fireEvent.click(screen.getByRole("button", { name: /Generate Report/i }));
 
     expect(await screen.findByText(/Report Results/i)).toBeInTheDocument();
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "start",
+    });
 
     // Table content from mocked report result (metric selector hidden in Table view)
     expect(await screen.findAllByText("sum(total)")).toHaveLength(1);
