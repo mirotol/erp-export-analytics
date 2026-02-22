@@ -73,6 +73,13 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ReportResult | null>(null);
+  const resultsRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (result && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [result]);
 
   const [openPopover, setOpenPopover] = useState<string | null>(null);
 
@@ -401,7 +408,10 @@ export function BuildReport({ uploadResult }: BuildReportProps) {
       </Card>
 
       {result && (
-        <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <section
+          ref={resultsRef}
+          className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+        >
           <ReportResults result={result} />
         </section>
       )}

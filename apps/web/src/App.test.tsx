@@ -68,6 +68,7 @@ describe("App Happy Path", () => {
     });
 
     vi.stubGlobal("fetch", fetchMock);
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
   });
 
   it("renders page, loads samples, and can run a report", async () => {
@@ -85,8 +86,13 @@ describe("App Happy Path", () => {
 
     expect(await screen.findByText(/Report Results/i)).toBeInTheDocument();
 
-    // Table content from mocked report result
-    expect(await screen.findAllByText("sum(total)")).toHaveLength(2); // One in table header, one in metric selector
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "start",
+    });
+
+    // Table content from mocked report result (metric selector hidden in Table view)
+    expect(await screen.findAllByText("sum(total)")).toHaveLength(1);
     expect(screen.getByText("100.00")).toBeInTheDocument();
 
     // Switch to chart
@@ -103,8 +109,8 @@ describe("App Happy Path", () => {
     const tableToggle = screen.getByRole("button", { name: /Table/i });
     fireEvent.click(tableToggle);
 
-    // Table content visible again
-    expect(await screen.findAllByText("sum(total)")).toHaveLength(2);
+    // Table content visible again (metric selector hidden in Table view)
+    expect(await screen.findAllByText("sum(total)")).toHaveLength(1);
     expect(screen.getByText("100.00")).toBeInTheDocument();
   });
 });
