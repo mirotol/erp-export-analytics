@@ -28,14 +28,20 @@ var SampleFiles = map[string]SampleFile{
 	"sample-invoices": {
 		ID:       "sample-invoices",
 		FileName: "sample-invoices.csv",
-		Title:    "Invoices (ERP export)",
+		Title:    "Invoices",
 		Rows:     50,
 	},
 	"sample-payments": {
 		ID:       "sample-payments",
 		FileName: "sample-payments.csv",
-		Title:    "Payments (ERP export)",
+		Title:    "Payments",
 		Rows:     80,
+	},
+	"sample-subscriptions": {
+		ID:       "sample-subscriptions",
+		FileName: "sample-subscriptions.csv",
+		Title:    "SaaS Subscriptions",
+		Rows:     450,
 	},
 }
 
@@ -46,7 +52,7 @@ func handleGetSamples(w http.ResponseWriter, r *http.Request) {
 	}
 
 	samples := make([]SampleFile, 0, len(SampleFiles))
-	ids := []string{"sample-invoices", "sample-payments"}
+	ids := []string{"sample-invoices", "sample-payments", "sample-subscriptions"}
 	for _, id := range ids {
 		if s, ok := SampleFiles[id]; ok {
 			samples = append(samples, s)

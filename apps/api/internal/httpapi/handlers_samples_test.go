@@ -29,8 +29,8 @@ func TestHandleSamples(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if len(resp) != 2 {
-			t.Errorf("expected 2 samples, got %d", len(resp))
+		if len(resp) != 3 {
+			t.Errorf("expected 3 samples, got %d", len(resp))
 		}
 
 		if resp[0].ID != "sample-invoices" {

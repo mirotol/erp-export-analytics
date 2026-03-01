@@ -41,19 +41,29 @@ export function ReportResults({ result }: ReportResultsProps) {
       .filter((idx) => idx !== -1);
   }, [result.columns]);
 
-  // Default metric selection
-  const [selectedMetricIdx, setSelectedMetricIdx] = useState(() => {
-    const avgIdx = result.columns.findIndex((c) => c.startsWith("avg("));
-    if (avgIdx !== -1 && numericColumnIndices.includes(avgIdx)) return avgIdx;
+  const dimensionIndices = useMemo(() => {
+    return result.columns
+      .map((col, idx) => {
+        const isMetric = col === "count" || col.startsWith("sum(") || col.startsWith("avg(");
+        return isMetric ? -1 : idx;
+      })
+      .filter((idx) => idx !== -1);
+  }, [result.columns]);
 
-    const sumIdx = result.columns.findIndex((c) => c.startsWith("sum("));
-    if (sumIdx !== -1 && numericColumnIndices.includes(sumIdx)) return sumIdx;
+  const dimensions = useMemo(
+    () => dimensionIndices.map((i) => result.columns[i]),
+    [dimensionIndices, result.columns]
+  );
 
-    const countIdx = result.columns.findIndex((c) => c === "count");
-    if (countIdx !== -1 && numericColumnIndices.includes(countIdx)) return countIdx;
+  const metrics = useMemo(
+    () => numericColumnIndices.map((i) => result.columns[i]),
+    [numericColumnIndices, result.columns]
+  );
 
-    return numericColumnIndices.length > 0 ? numericColumnIndices[0] : -1;
-  });
+  const chartRows = useMemo(() => {
+    const indices = [...dimensionIndices, ...numericColumnIndices];
+    return result.rows.map((row) => indices.map((i) => row[i]));
+  }, [result.rows, dimensionIndices, numericColumnIndices]);
 
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(() => {
     // Default sorting:
@@ -207,12 +217,7 @@ export function ReportResults({ result }: ReportResultsProps) {
           </div>
         </div>
       ) : (
-        <ReportChart
-          result={result}
-          selectedMetricIdx={selectedMetricIdx}
-          setSelectedMetricIdx={setSelectedMetricIdx}
-          numericColumnIndices={numericColumnIndices}
-        />
+        <ReportChart dimensions={dimensions} metrics={metrics} rows={chartRows} />
       )}
     </div>
   );
