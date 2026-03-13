@@ -16,8 +16,7 @@ This project is a browser-based CSV analytics tool built with React and TypeScri
 - Aggregation metrics (Count, Sum, Average).
 - High cardinality detection for dimensions.
 - Table and chart visualizations using Recharts.
-- Collapsible report preview for initial data inspection.
-- Two-column layout for builder and results.
+- Report preview for initial data inspection.
 - Dark and light theme support.
 
 ### How it Works
